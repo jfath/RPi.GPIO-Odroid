@@ -11,7 +11,7 @@ RPi.GPIO by Ben Croston
 Hardkernel WiringPi port  
   https://github.com/hardkernel/wiringPi  
 
-swkim01's Odroic C1 RPi.GPIO port  
+swkim01's Odroid C1 RPi.GPIO port  
   https://github.com/swkim01/RPi.GPIO-OdroidC1  
   
   
