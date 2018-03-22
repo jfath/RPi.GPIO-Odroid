@@ -46,6 +46,12 @@ SOFTWARE.
 #define PAGE_SIZE  (4*1024)
 #define BLOCK_SIZE (4*1024)
 
+//Split Odroid specific vars and code into seperate files
+#define DEFINE_ODROID_VARS
+#include "odroid.h"
+#define DEFINE_ODROID_CODE
+#include "odroid.c"
+
 static volatile uint32_t *gpio_map;
 
 void short_wait(void)

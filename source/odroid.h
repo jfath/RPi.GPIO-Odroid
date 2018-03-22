@@ -1,0 +1,408 @@
+/*
+*  Odroid specific code borrowed from Hardkernel's wiringPi port
+*
+*/
+
+#ifndef ODROID_H_INCLUDED
+#define ODROID_H_INCLUDED
+
+/* start wiringPi.h code */
+
+#define	PI_MODEL_UNKNOWN  0
+#define	PI_MODEL_A        1
+#define	PI_MODEL_B        2
+#define	PI_MODEL_BP       3
+#define	PI_MODEL_CM       4
+#define	PI_MODEL_AP       5
+#define	PI_MODEL_ODROIDC  6
+#define PI_MODEL_ODROIDXU_34    7
+#define	PI_MODEL_ODROIDC2	8
+
+// Failure modes
+
+#define	WPI_FATAL	(1==1)
+#define	WPI_ALMOST	(1==2)
+
+/* end wiringPi.h code */
+
+
+/* start wiringPi.c code */
+
+#ifndef	TRUE
+#define	TRUE	(1==1)
+#define	FALSE	(1==2)
+#endif
+
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(x)	(sizeof(x) / sizeof((x)[0]))
+#endif
+
+//
+// For ODROID-C Board
+//
+#define ODROIDC_GPIO_MASK (0xFFFFFF80)
+
+#define ODROIDC_PERI_BASE 0xC1100000
+#define GPIO_REG_OFFSET   0x8000
+#define ODROID_GPIO_BASE  (ODROIDC_PERI_BASE + GPIO_REG_OFFSET)
+
+#define GPIO_PIN_BASE           80
+#define GPIOY_PIN_START         80
+#define GPIOY_PIN_END           96
+#define GPIOX_PIN_START         97
+#define GPIOX_PIN_END           118
+
+#define GPIOX_FSEL_REG_OFFSET   0x0C
+#define GPIOX_OUTP_REG_OFFSET   0x0D
+#define GPIOX_INP_REG_OFFSET    0x0E
+#define GPIOX_PUPD_REG_OFFSET   0x3E
+#define GPIOX_PUEN_REG_OFFSET   0x4C
+
+#define GPIOY_FSEL_REG_OFFSET   0x0F
+#define GPIOY_OUTP_REG_OFFSET   0x10
+#define GPIOY_INP_REG_OFFSET    0x11
+#define GPIOY_PUPD_REG_OFFSET   0x3D
+#define GPIOY_PUEN_REG_OFFSET   0x4B
+
+#define piAinNode0   "/sys/class/saradc/saradc_ch0"
+#define piAinNode1   "/sys/class/saradc/saradc_ch1"
+
+static int adcFds [2] = {
+    -1, -1,
+} ;
+
+//
+// For ODROID-C2 Board
+//
+#define ODROIDC2_GPIO_MASK		(0xFFFFFF00)
+#define ODROIDC2_GPIO_BASE		0xC8834000
+
+#define C2_GPIO_PIN_BASE           136
+#define C2_GPIOY_PIN_START         (C2_GPIO_PIN_BASE + 75)
+#define C2_GPIOY_PIN_END           (C2_GPIO_PIN_BASE + 91)
+#define C2_GPIOX_PIN_START         (C2_GPIO_PIN_BASE + 92)
+#define C2_GPIOX_PIN_END           (C2_GPIO_PIN_BASE + 114)
+
+#define C2_GPIOX_FSEL_REG_OFFSET   0x118
+#define C2_GPIOX_OUTP_REG_OFFSET   0x119
+#define C2_GPIOX_INP_REG_OFFSET    0x11A
+#define C2_GPIOX_PUPD_REG_OFFSET   0x13E
+#define C2_GPIOX_PUEN_REG_OFFSET   0x14C
+
+#define C2_GPIOY_FSEL_REG_OFFSET   0x10F
+#define C2_GPIOY_OUTP_REG_OFFSET   0x110
+#define C2_GPIOY_INP_REG_OFFSET    0x111
+#define C2_GPIOY_PUPD_REG_OFFSET   0x13B
+#define C2_GPIOY_PUEN_REG_OFFSET   0x149
+
+#define C2_piAinNode0   "/sys/class/saradc/ch0"
+#define C2_piAinNode1   "/sys/class/saradc/ch1"
+
+//
+// For ODROID-XU3/4 Board
+//
+#define ODROIDXU_GPIO_MASK  (0xFFFFFF00)
+
+#define ODROIDXU_GPX_BASE   0x13400000  // GPX0,1,2,3
+#define ODROIDXU_GPA_BASE   0x14010000  // GPA0,1,2, GPB0,1,2,3,4
+
+#define GPIO_X1_START       16
+#define GPIO_X1_CON_OFFSET  0x0C20
+#define GPIO_X1_DAT_OFFSET  0x0C24
+#define GPIO_X1_PUD_OFFSET  0x0C28
+#define GPIO_X1_END         23
+
+#define GPIO_X2_START       24
+#define GPIO_X2_CON_OFFSET  0x0C40
+#define GPIO_X2_DAT_OFFSET  0x0C44
+#define GPIO_X2_PUD_OFFSET  0x0C48
+#define GPIO_X2_END         31
+
+#define GPIO_X3_START       32
+#define GPIO_X3_CON_OFFSET  0x0C60
+#define GPIO_X3_DAT_OFFSET  0x0C64
+#define GPIO_X3_PUD_OFFSET  0x0C68
+#define GPIO_X3_END         39
+
+#define GPIO_A0_START       171
+#define GPIO_A0_CON_OFFSET  0x0000
+#define GPIO_A0_DAT_OFFSET  0x0004
+#define GPIO_A0_PUD_OFFSET  0x0008
+#define GPIO_A0_END         178
+
+#define GPIO_A2_START       185
+#define GPIO_A2_CON_OFFSET  0x0040
+#define GPIO_A2_DAT_OFFSET  0x0044
+#define GPIO_A2_PUD_OFFSET  0x0048
+#define GPIO_A2_END         192
+
+#define GPIO_B3_START       207
+#define GPIO_B3_CON_OFFSET  0x00C0
+#define GPIO_B3_DAT_OFFSET  0x00C4
+#define GPIO_B3_PUD_OFFSET  0x00C8
+#define GPIO_B3_END         214
+
+
+#ifdef DEFINE_ODROID_VARS
+
+int wiringPiReturnCodes = FALSE ;
+
+static volatile uint32_t *gpio, *gpio1;
+
+// pinToGpio:
+//	Take a Wiring pin (0 through X) and re-map it to the BCM_GPIO pin
+//	Cope for 3 different board revisions here.
+
+static int *pinToGpio ;  //!!!Needs init
+static int pin_array_count;  //!!!Needs init
+
+// physToGpio:
+//	Take a physical pin (1 through 26) and re-map it to the BCM_GPIO pin
+//	Cope for 2 different board revisions here.
+//	Also add in the P5 connector, so the P5 pins are 3,4,5,6, so 53,54,55,56
+
+static int *physToGpio ;  //!!!Needs init
+
+static char *piAinNode0_xu;  //!!!Needs init
+static char *piAinNode1_xu;  //!!!Needs init
+
+static int sysFdData [64] = {
+    -1, -1, -1, -1, -1, -1, -1, -1, // 0...7
+    -1, -1, -1, -1, -1, -1, -1, -1, // 8...15
+    -1, -1, -1, -1, -1, -1, -1, -1, // 16...23
+    -1, -1, -1, -1, -1, -1, -1, -1, // 24...31
+    -1, -1, -1, -1, -1, -1, -1, -1, // 32...39
+    -1, -1, -1, -1, -1, -1, -1, -1, // 40...47
+    -1, -1, -1, -1, -1, -1, -1, -1, // 48...55
+    -1, -1, -1, -1, -1, -1, -1, -1, // 56...63
+};
+
+static int sysFdIrqType [64] = {
+    -1, -1, -1, -1, -1, -1, -1, -1, // 0...7
+    -1, -1, -1, -1, -1, -1, -1, -1, // 8...15
+    -1, -1, -1, -1, -1, -1, -1, -1, // 16...23
+    -1, -1, -1, -1, -1, -1, -1, -1, // 24...31
+    -1, -1, -1, -1, -1, -1, -1, -1, // 32...39
+    -1, -1, -1, -1, -1, -1, -1, -1, // 40...47
+    -1, -1, -1, -1, -1, -1, -1, -1, // 48...55
+    -1, -1, -1, -1, -1, -1, -1, -1, // 56...63
+};
+
+
+//
+// pinToGpio:
+//	Take a Wiring pin (0 through X) and re-map it to the ODROID_GPIO pin
+//
+static int pinToGpioOdroidC [64] = {
+    88,  87, 116, 115, 104, 102, 103,  83, // 0..7
+    -1,  -1, 117, 118, 107, 106, 105,  -1, // 8..16
+    -1,  -1,  -1,  -1,  -1, 101, 100, 108, // 16..23
+    97,  -1,  99,  98,  -1,  -1,  -1,  -1, // 24..31
+// Padding:
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,	// ... 47
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,	// ... 63
+};
+
+//
+// physToGpio:
+//	Take a physical pin (1 through 40) and re-map it to the ODROID_GPIO pin
+//
+static int physToGpioOdroidC [64] =
+{
+  -1,       // 0
+  -1,  -1,	// 1, 2
+  -1,  -1,
+  -1,  -1,
+  83,  -1,
+  -1,  -1,
+  88,  87,
+ 116,  -1,
+ 115, 104,
+  -1, 102,
+ 107,  -1,
+ 106, 103,
+ 105, 117,
+  -1, 118,	// 25, 26
+
+  -1,  -1,
+ 101,  -1,
+ 100,  99,
+ 108,  -1,
+  97,  98,
+  -1,  -1,
+  -1,  -1, // 39, 40
+
+// Not used
+  -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1,
+} ;
+
+//
+// pinToGpio:
+//	Take a Wiring pin (0 through X) and re-map it to the ODROIDC2_GPIO pin
+//
+static int pinToGpioOdroidC2_Rev1_1 [64] = {
+   247, 238, 239, 237, 236, 233, 231, 249, // 0..7
+    -1,  -1, 229, 225, 235, 232, 230,  -1, // 8..15
+    -1,  -1,  -1,  -1,  -1, 228, 219, 234, // 16..23
+   214,  -1, 224, 218,  -1,  -1,  -1,  -1, // 24..31
+// Padding:
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,	// ... 47
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,	// ... 63
+};
+
+
+static int pinToGpioOdroidC2_Rev1_0 [64] = {
+   219, 218, 247,  -1, 235, 233, 234, 214, // 0..7
+    -1,  -1, 248, 249, 238, 237, 236,  -1, // 8..15
+    -1,  -1,  -1,  -1,  -1, 232, 231, 239, // 16..23
+   228,  -1, 230, 229,  -1,  -1,  -1,  -1, // 24..31
+// Padding:
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,	// ... 47
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,	// ... 63
+};
+
+//
+// physToGpio:
+//	Take a physical pin (1 through 40) and re-map it to the ODROIDC2_GPIO pin
+//
+static int physToGpioOdroidC2_Rev1_1 [64] =
+{
+  -1,       // 0
+  -1,  -1,	// 1, 2
+  -1,  -1,
+  -1,  -1,
+ 249,  -1,
+  -1,  -1,
+ 247, 238,
+ 239,  -1,
+ 237, 236,
+  -1, 233,
+ 235,  -1,
+ 232, 231,
+ 230, 229,
+  -1, 225,	// 25, 26
+
+  -1,  -1,
+ 228,  -1,
+ 219, 224,
+ 234,  -1,
+ 214, 218,
+  -1,  -1,
+  -1,  -1, // 39, 40
+
+// Not used
+  -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1,
+} ;
+
+
+static int physToGpioOdroidC2_Rev1_0 [64] =
+{
+  -1,       // 0
+  -1,  -1,	// 1, 2
+  -1,  -1,
+  -1,  -1,
+ 214,  -1,
+  -1,  -1,
+ 219, 218,
+ 247,  -1,
+  -1, 235,
+  -1, 233,
+ 238,  -1,
+ 237, 234,
+ 236, 248,
+  -1, 249,	// 25, 26
+
+  -1,  -1,
+ 232,  -1,
+ 231, 230,
+ 239,  -1,
+ 228, 229,
+  -1,  -1,
+  -1,  -1, // 39, 40
+
+// Not used
+  -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1,
+} ;
+
+//
+// pinToGpio:
+//	Take a Wiring pin (0 through X) and re-map it to the ODROIDXU_GPIO pin
+//
+static int pinToGpioOdroidXU [64] = {
+   174, 173,    //  0 |  1 : GPA0.3(UART_0.CTSN), GPA0.2(UART_0.RTSN)
+    21,  22,    //  2 |  3 : GPX1.5, GPX1.6
+    19,  23,    //  4 |  5 : GPX1.3, GPX1.7
+    24,  18,    //  6 |  7 : GPX2.0, GPX1.2
+
+   209, 210,    //  8 |  9 : GPB3.2(I2C_1.SDA), GPB3.3(I2C_1.SCL)
+   190,  25,    // 10 | 11 : GPA2.5(SPI_1.CSN), GPX2.1
+   192, 191,    // 12 | 13 : GPA2.7(SPI_1.MOSI), GPA2.6(SPI_1.MISO)
+   189, 172,    // 14 | 15 : GPA2.4(SPI_1.SCLK), GPA0.1(UART_0.TXD)
+   171,  -1,    // 16 | 17 : GPA0.0(UART_0.RXD),
+    -1,  -1,    // 18 | 19
+    -1,  28,    // 20 | 21 :  , GPX2.4
+    30,  31,    // 22 | 23 : GPX2.6, GPX2.7
+    -1,  -1,    // 24 | 25   PWR_ON(INPUT), ADC_0.AIN0
+    29,  33,    // 26 | 27 : GPX2.5, GPX3.1
+    -1,  -1,    // 28 | 29 : REF1.8V OUT, ADC_0.AIN3
+   187, 188,    // 30 | 31 : GPA2.2(I2C_5.SDA), GPA2.3(I2C_5.SCL)
+
+    // Padding:
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,	// 32...47
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,	// 48...63
+};
+
+//
+// physToGpio:
+//	Take a physical pin (1 through 40) and re-map it to the ODROIDXU_GPIO pin
+//
+static int physToGpioOdroidXU [64] =
+{
+    -1,         //  0
+    -1,  -1,	//  1 |  2 : 3.3V, 5.0V
+   209,  -1,    //  3 |  4 : GPB3.2(I2C_1.SDA), 5.0V
+   210,  -1,    //  5 |  6 : GPB3.3(I2C_1.SCL), GND
+    18, 172,    //  7 |  8 : GPX1.2, GPA0.1(UART_0.TXD)
+    -1, 171,    //  9 | 10 : GND, GPA0.0(UART_0.RXD)
+   174, 173,    // 11 | 12 : GPA0.3(UART_0.CTSN), GPA0.2(UART_0.RTSN)
+    21,  -1,    // 13 | 14 : GPX1.5, GND
+    22,  19,    // 15 | 16 : GPX1.6, GPX1.3
+    -1,  23,    // 17 | 18 : 3.3V, GPX1.7
+   192,  -1,    // 19 | 20 : GPA2.7(SPI_1.MOSI), GND
+   191,  24,    // 21 | 22 : GPA2.6(SPI_1.MISO), GPX2.0
+   189, 190,    // 23 | 24 : GPA2.4(SPI_1.SCLK), GPA2.5(SPI_1.CSN)
+    -1,  25,    // 25 | 26 : GND, GPX2.1
+   187, 188,    // 27 | 28 : GPA2.2(I2C_5.SDA), GPA2.4(I2C_5.SCL)
+    28,  -1,    // 29 | 30 : GPX2.4, GND
+    30,  29,    // 31 | 32 : GPX2.6, GPX2.5
+    31,  -1,    // 33 | 34 : GPX2.7, GND
+    -1,  33,    // 35 | 36 : PWR_ON(INPUT), GPX3.1
+    -1,  -1,    // 37 | 38 : ADC_0.AIN0, 1.8V REF OUT
+    -1,  -1,    // 39 | 40 : GND, AADC_0.AIN3
+
+    // Not used
+    -1, -1, -1, -1, -1, -1, -1, -1, // 41...48
+    -1, -1, -1, -1, -1, -1, -1, -1, // 49...56
+    -1, -1, -1, -1, -1, -1, -1      // 57...63
+} ;
+
+/* end wiringPi.c code */
+
+#define EXTERN
+
+#else /* DEFINE_ODROID_VARS */
+
+#define EXTERN extern
+
+#endif /* DEFINE_ODROID_VARS */
+
+EXTERN int odroid_found;
+EXTERN int  piModel;
+
+#endif /* ODROID_H_INCLUDED */

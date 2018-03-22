@@ -24,6 +24,7 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 #include "cpuinfo.h"
+#include "odroid.h"
 
 int get_rpi_info(rpi_info *info)
 {
@@ -46,6 +47,20 @@ int get_rpi_info(rpi_info *info)
           strcmp(hardware, "BCM2836") == 0 ||
           strcmp(hardware, "BCM2837") == 0 ) {
          found = 1;
+      }
+      else {  //Check for Odroid
+          if (strcmp(hardware, "ODROIDC") == 0) {
+              piModel = PI_MODEL_ODROIDC;
+              odroid_found = found = 1;
+          }
+          else if (strcmp(hardware, "ODROID-C2") == 0) {
+              piModel = PI_MODEL_ODROIDC2;
+              odroid_found = found = 1;
+          }
+          else if (strcmp(hardware, "ODROID-XU4") == 0) {
+              piModel = PI_MODEL_ODROIDXU_34;
+              odroid_found = found = 1;
+          }
       }
       sscanf(buffer, "Revision	: %s", revision);
    }
