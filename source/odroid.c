@@ -318,6 +318,7 @@ int wiringPiSetupOdroid (void)
         gpio = (uint32_t *)mmap(0, BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, ODROID_GPIO_BASE);
         if ((int32_t)gpio == -1)
             return wiringPiFailure(WPI_ALMOST, "wiringPiSetup: mmap (GPIO) failed: %s\n", strerror(errno));
+        gpio1 = gpio;
 
         // ADC
         // ADC sysfs open (/sys/class/saradc/saradc_ch0, ch1)
@@ -344,6 +345,7 @@ int wiringPiSetupOdroid (void)
         gpio = (uint32_t *)mmap(0, BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, ODROIDC2_GPIO_BASE);
         if ((int32_t)gpio == -1)
             return wiringPiFailure(WPI_ALMOST, "wiringPiSetup: mmap (GPIO) failed: %s\n", strerror(errno));
+        gpio1 = gpio;
 
         // ADC
         // ADC sysfs open (/sys/class/saradc/saradc_ch0, ch1)

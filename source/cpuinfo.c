@@ -36,6 +36,8 @@ int get_rpi_info(rpi_info *info)
    int found = 0;
    int len;
 
+   odroid_found = 0;
+
    if ((fp = fopen("/proc/cpuinfo", "r")) == NULL)
       return -1;
    while(!feof(fp)) {

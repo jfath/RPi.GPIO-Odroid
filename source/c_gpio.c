@@ -79,10 +79,12 @@ int setup(void)
     // it calls this (in mmap_gpio_mem) so we know odroid_found and piModel
     if (odroid_found) {
         wiringPiSetupOdroid();  //Will exit on fail
-        //!!!xu4 maps two areas
-        //!!!gpio1 needed for GPA 2.4, 2.5, 2.6, 2.7, 3.2, 3.3
-        //!!!need a wrapper function for gpio_map access
-        gpio_map = gpio;
+        //xu4 maps two areas
+        //gpio1 needed for GPA 2.4, 2.5, 2.6, 2.7, 3.2, 3.3
+        //wiringPi code uses second pointer for pins >= 100
+        //we use gpio_map_odroid array for access
+        gpio_map = gpio_map_odroid[0] = gpio;
+        gpio_map_odroid[1] = gpio1;
         return SETUP_OK;
     }
 
@@ -246,15 +248,15 @@ void set_pullupdn(int gpio, int pud)
     if (odroid_found) {
         if(pud) {
             // Enable Pull/Pull-down resister
-            *(gpio_map + gpioToPUENReg(gpio)) = (*(gpio_map + gpioToPUENReg(gpio)) | (1 << gpioToShiftReg(gpio)));
+            *(gpio_map_odroid[(gpio >= 100)] + gpioToPUENReg(gpio)) = (*(gpio_map_odroid[(gpio >= 100)] + gpioToPUENReg(gpio)) | (1 << gpioToShiftReg(gpio)));
 
             if(pud == PUD_UP)
-                *(gpio_map + gpioToPUPDReg(gpio)) = (*(gpio_map + gpioToPUPDReg(gpio)) |  (1 << gpioToShiftReg(gpio)));
+                *(gpio_map_odroid[(gpio >= 100)] + gpioToPUPDReg(gpio)) = (*(gpio_map_odroid[(gpio >= 100)] + gpioToPUPDReg(gpio)) |  (1 << gpioToShiftReg(gpio)));
             else
-                *(gpio_map + gpioToPUPDReg(gpio)) = (*(gpio_map + gpioToPUPDReg(gpio)) & ~(1 << gpioToShiftReg(gpio)));
+                *(gpio_map_odroid[(gpio >= 100)] + gpioToPUPDReg(gpio)) = (*(gpio_map_odroid[(gpio >= 100)] + gpioToPUPDReg(gpio)) & ~(1 << gpioToShiftReg(gpio)));
         }
         else    // Disable Pull/Pull-down resister
-            *(gpio_map + gpioToPUENReg(gpio)) = (*(gpio_map + gpioToPUENReg(gpio)) & ~(1 << gpioToShiftReg(gpio)));
+            *(gpio_map_odroid[(gpio >= 100)] + gpioToPUENReg(gpio)) = (*(gpio_map_odroid[(gpio >= 100)] + gpioToPUENReg(gpio)) & ~(1 << gpioToShiftReg(gpio)));
     }
     else {
         int clk_offset = PULLUPDNCLK_OFFSET + (gpio/32);
@@ -280,9 +282,9 @@ void setup_gpio(int gpio, int direction, int pud)
     if (odroid_found) {
         set_pullupdn(gpio, pud);
         if (direction == OUTPUT)
-            *(gpio_map + gpioToGPFSELReg(gpio)) = (*(gpio_map + gpioToGPFSELReg(gpio)) & ~(1 << gpioToShiftReg(gpio)));
+            *(gpio_map_odroid[(gpio >= 100)] + gpioToGPFSELReg(gpio)) = (*(gpio_map_odroid[(gpio >= 100)] + gpioToGPFSELReg(gpio)) & ~(1 << gpioToShiftReg(gpio)));
         else  // direction == INPUT
-            *(gpio_map + gpioToGPFSELReg(gpio)) = (*(gpio_map + gpioToGPFSELReg(gpio)) |  (1 << gpioToShiftReg(gpio)));   
+            *(gpio_map_odroid[(gpio >= 100)] + gpioToGPFSELReg(gpio)) = (*(gpio_map_odroid[(gpio >= 100)] + gpioToGPFSELReg(gpio)) |  (1 << gpioToShiftReg(gpio)));   
     }
     else {
         int offset = FSEL_OFFSET + (gpio/10);
@@ -301,7 +303,7 @@ int gpio_function(int gpio)
 {
     if (odroid_found) {
         int shift = gpioToShiftReg(gpio);
-        int value = (*(gpio_map + gpioToGPFSELReg(gpio)) & (1 << gpioToShiftReg(gpio)));
+        int value = (*(gpio_map_odroid[(gpio >= 100)] + gpioToGPFSELReg(gpio)) & (1 << gpioToShiftReg(gpio)));
         value >>= shift;
         return ~value & 1; // 0=input, 1=output
     }
@@ -319,9 +321,9 @@ void output_gpio(int gpio, int value)
 {
     if (odroid_found) {
         if (value) // value == HIGH
-            *(gpio_map + gpioToGPSETReg(gpio)) |=  (1 << gpioToShiftReg(gpio));
+            *(gpio_map_odroid[(gpio >= 100)] + gpioToGPSETReg(gpio)) |=  (1 << gpioToShiftReg(gpio));
         else       // value == LOW
-            *(gpio_map + gpioToGPSETReg(gpio)) &= ~(1 << gpioToShiftReg(gpio));
+            *(gpio_map_odroid[(gpio >= 100)] + gpioToGPSETReg(gpio)) &= ~(1 << gpioToShiftReg(gpio));
     }
     else {
         int offset, shift;
@@ -340,7 +342,7 @@ void output_gpio(int gpio, int value)
 int input_gpio(int gpio)
 {
     if (odroid_found) {
-        return (*(gpio_map + gpioToGPLEVReg(gpio)) & (1 << gpioToShiftReg(gpio)));
+        return (*(gpio_map_odroid[(gpio >= 100)] + gpioToGPLEVReg(gpio)) & (1 << gpioToShiftReg(gpio)));
     }
     else {
         int offset, value, mask;
@@ -354,5 +356,11 @@ int input_gpio(int gpio)
 
 void cleanup(void)
 {
-    munmap((void *)gpio_map, BLOCK_SIZE);
+    if (odroid_found) {
+        munmap((void *)gpio_map_odroid[0], BLOCK_SIZE);
+        if (gpio_map_odroid[0] != gpio_map_odroid[1]) munmap((void *)gpio_map_odroid[1], BLOCK_SIZE);
+    }
+    else {
+        munmap((void *)gpio_map, BLOCK_SIZE);
+    }
 }

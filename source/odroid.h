@@ -153,18 +153,18 @@ static volatile uint32_t *gpio, *gpio1;
 //	Take a Wiring pin (0 through X) and re-map it to the BCM_GPIO pin
 //	Cope for 3 different board revisions here.
 
-static int *pinToGpio ;  //!!!Needs init
-static int pin_array_count;  //!!!Needs init
+static int *pinToGpio ;
+static int pin_array_count;
 
 // physToGpio:
 //	Take a physical pin (1 through 26) and re-map it to the BCM_GPIO pin
 //	Cope for 2 different board revisions here.
 //	Also add in the P5 connector, so the P5 pins are 3,4,5,6, so 53,54,55,56
 
-static int *physToGpio ;  //!!!Needs init
+static int *physToGpio ;
 
-static char *piAinNode0_xu;  //!!!Needs init
-static char *piAinNode1_xu;  //!!!Needs init
+static char *piAinNode0_xu;
+static char *piAinNode1_xu;
 
 static int sysFdData [64] = {
     -1, -1, -1, -1, -1, -1, -1, -1, // 0...7
@@ -397,6 +397,7 @@ static int physToGpioOdroidXU [64] =
 /* Non-static add extern definition below */
 int odroid_found;
 int  piModel;
+static volatile uint32_t *gpio_map_odroid[2];
 
 
 #else /* DEFINE_ODROID_VARS */
