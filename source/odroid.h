@@ -394,15 +394,18 @@ static int physToGpioOdroidXU [64] =
 
 /* end wiringPi.c code */
 
-#define EXTERN
+/* Non-static add extern definition below */
+int odroid_found;
+int  piModel;
+
 
 #else /* DEFINE_ODROID_VARS */
 
-#define EXTERN extern
+extern int odroid_found;
+extern int  piModel;
+
 
 #endif /* DEFINE_ODROID_VARS */
 
-EXTERN int odroid_found;
-EXTERN int  piModel;
 
 #endif /* ODROID_H_INCLUDED */

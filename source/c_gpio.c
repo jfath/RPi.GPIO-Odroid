@@ -75,6 +75,17 @@ int setup(void)
     char hardware[1024];
     int found = 0;
 
+    // Python init module code calls get_rpi_info before
+    // it calls this (in mmap_gpio_mem) so we know odroid_found and piModel
+    if (odroid_found) {
+        wiringPiSetupOdroid();  //Will exit on fail
+        //!!!xu4 maps two areas
+        //!!!gpio1 needed for GPA 2.4, 2.5, 2.6, 2.7, 3.2, 3.3
+        //!!!need a wrapper function for gpio_map access
+        gpio_map = gpio;
+        return SETUP_OK;
+    }
+
     // try /dev/gpiomem first - this does not require root privs
     if ((mem_fd = open("/dev/gpiomem", O_RDWR|O_SYNC)) > 0)
     {
@@ -141,140 +152,204 @@ int setup(void)
 
 void clear_event_detect(int gpio)
 {
-    int offset = EVENT_DETECT_OFFSET + (gpio/32);
-    int shift = (gpio%32);
+    if (odroid_found) return;
+    else {
+        int offset = EVENT_DETECT_OFFSET + (gpio/32);
+        int shift = (gpio%32);
 
-    *(gpio_map+offset) |= (1 << shift);
-    short_wait();
-    *(gpio_map+offset) = 0;
+        *(gpio_map+offset) |= (1 << shift);
+        short_wait();
+        *(gpio_map+offset) = 0;
+    }
 }
 
 int eventdetected(int gpio)
 {
-    int offset, value, bit;
+    if (odroid_found) return 0;
+    else {
+        int offset, value, bit;
 
-    offset = EVENT_DETECT_OFFSET + (gpio/32);
-    bit = (1 << (gpio%32));
-    value = *(gpio_map+offset) & bit;
-    if (value)
-        clear_event_detect(gpio);
-    return value;
+        offset = EVENT_DETECT_OFFSET + (gpio/32);
+        bit = (1 << (gpio%32));
+        value = *(gpio_map+offset) & bit;
+        if (value)
+            clear_event_detect(gpio);
+        return value;
+    }
 }
 
 void set_rising_event(int gpio, int enable)
 {
-    int offset = RISING_ED_OFFSET + (gpio/32);
-    int shift = (gpio%32);
+    if (odroid_found) return;
+    else {
+        int offset = RISING_ED_OFFSET + (gpio/32);
+        int shift = (gpio%32);
 
-    if (enable)
-        *(gpio_map+offset) |= 1 << shift;
-    else
-        *(gpio_map+offset) &= ~(1 << shift);
-    clear_event_detect(gpio);
+        if (enable)
+            *(gpio_map+offset) |= 1 << shift;
+        else
+            *(gpio_map+offset) &= ~(1 << shift);
+        clear_event_detect(gpio);
+    }
 }
 
 void set_falling_event(int gpio, int enable)
 {
-    int offset = FALLING_ED_OFFSET + (gpio/32);
-    int shift = (gpio%32);
+    if (odroid_found) return;
+    else {
+        int offset = FALLING_ED_OFFSET + (gpio/32);
+        int shift = (gpio%32);
 
-    if (enable) {
-        *(gpio_map+offset) |= (1 << shift);
-        *(gpio_map+offset) = (1 << shift);
-    } else {
-        *(gpio_map+offset) &= ~(1 << shift);
+        if (enable) {
+            *(gpio_map+offset) |= (1 << shift);
+            *(gpio_map+offset) = (1 << shift);
+        } else {
+            *(gpio_map+offset) &= ~(1 << shift);
+        }
+        clear_event_detect(gpio);
     }
-    clear_event_detect(gpio);
 }
 
 void set_high_event(int gpio, int enable)
 {
-    int offset = HIGH_DETECT_OFFSET + (gpio/32);
-    int shift = (gpio%32);
+    if (odroid_found) return;
+    else {
+        int offset = HIGH_DETECT_OFFSET + (gpio/32);
+        int shift = (gpio%32);
 
-    if (enable)
-        *(gpio_map+offset) |= (1 << shift);
-    else
-        *(gpio_map+offset) &= ~(1 << shift);
-    clear_event_detect(gpio);
+        if (enable)
+            *(gpio_map+offset) |= (1 << shift);
+        else
+            *(gpio_map+offset) &= ~(1 << shift);
+        clear_event_detect(gpio);
+    }
 }
 
 void set_low_event(int gpio, int enable)
 {
-    int offset = LOW_DETECT_OFFSET + (gpio/32);
-    int shift = (gpio%32);
+    if (odroid_found) return;
+    else {
 
-    if (enable)
-        *(gpio_map+offset) |= 1 << shift;
-    else
-        *(gpio_map+offset) &= ~(1 << shift);
-    clear_event_detect(gpio);
+        int offset = LOW_DETECT_OFFSET + (gpio/32);
+        int shift = (gpio%32);
+
+        if (enable)
+            *(gpio_map+offset) |= 1 << shift;
+        else
+            *(gpio_map+offset) &= ~(1 << shift);
+        clear_event_detect(gpio);
+    }
 }
 
 void set_pullupdn(int gpio, int pud)
 {
-    int clk_offset = PULLUPDNCLK_OFFSET + (gpio/32);
-    int shift = (gpio%32);
+    if (odroid_found) {
+        if(pud) {
+            // Enable Pull/Pull-down resister
+            *(gpio_map + gpioToPUENReg(gpio)) = (*(gpio_map + gpioToPUENReg(gpio)) | (1 << gpioToShiftReg(gpio)));
 
-    if (pud == PUD_DOWN)
-        *(gpio_map+PULLUPDN_OFFSET) = (*(gpio_map+PULLUPDN_OFFSET) & ~3) | PUD_DOWN;
-    else if (pud == PUD_UP)
-        *(gpio_map+PULLUPDN_OFFSET) = (*(gpio_map+PULLUPDN_OFFSET) & ~3) | PUD_UP;
-    else  // pud == PUD_OFF
+            if(pud == PUD_UP)
+                *(gpio_map + gpioToPUPDReg(gpio)) = (*(gpio_map + gpioToPUPDReg(gpio)) |  (1 << gpioToShiftReg(gpio)));
+            else
+                *(gpio_map + gpioToPUPDReg(gpio)) = (*(gpio_map + gpioToPUPDReg(gpio)) & ~(1 << gpioToShiftReg(gpio)));
+        }
+        else    // Disable Pull/Pull-down resister
+            *(gpio_map + gpioToPUENReg(gpio)) = (*(gpio_map + gpioToPUENReg(gpio)) & ~(1 << gpioToShiftReg(gpio)));
+    }
+    else {
+        int clk_offset = PULLUPDNCLK_OFFSET + (gpio/32);
+        int shift = (gpio%32);
+
+        if (pud == PUD_DOWN)
+            *(gpio_map+PULLUPDN_OFFSET) = (*(gpio_map+PULLUPDN_OFFSET) & ~3) | PUD_DOWN;
+        else if (pud == PUD_UP)
+            *(gpio_map+PULLUPDN_OFFSET) = (*(gpio_map+PULLUPDN_OFFSET) & ~3) | PUD_UP;
+        else  // pud == PUD_OFF
+            *(gpio_map+PULLUPDN_OFFSET) &= ~3;
+
+        short_wait();
+        *(gpio_map+clk_offset) = 1 << shift;
+        short_wait();
         *(gpio_map+PULLUPDN_OFFSET) &= ~3;
-
-    short_wait();
-    *(gpio_map+clk_offset) = 1 << shift;
-    short_wait();
-    *(gpio_map+PULLUPDN_OFFSET) &= ~3;
-    *(gpio_map+clk_offset) = 0;
+        *(gpio_map+clk_offset) = 0;
+    }
 }
 
 void setup_gpio(int gpio, int direction, int pud)
 {
-    int offset = FSEL_OFFSET + (gpio/10);
-    int shift = (gpio%10)*3;
+    if (odroid_found) {
+        set_pullupdn(gpio, pud);
+        if (direction == OUTPUT)
+            *(gpio_map + gpioToGPFSELReg(gpio)) = (*(gpio_map + gpioToGPFSELReg(gpio)) & ~(1 << gpioToShiftReg(gpio)));
+        else  // direction == INPUT
+            *(gpio_map + gpioToGPFSELReg(gpio)) = (*(gpio_map + gpioToGPFSELReg(gpio)) |  (1 << gpioToShiftReg(gpio)));   
+    }
+    else {
+        int offset = FSEL_OFFSET + (gpio/10);
+        int shift = (gpio%10)*3;
 
-    set_pullupdn(gpio, pud);
-    if (direction == OUTPUT)
-        *(gpio_map+offset) = (*(gpio_map+offset) & ~(7<<shift)) | (1<<shift);
-    else  // direction == INPUT
-        *(gpio_map+offset) = (*(gpio_map+offset) & ~(7<<shift));
+        set_pullupdn(gpio, pud);
+        if (direction == OUTPUT)
+            *(gpio_map+offset) = (*(gpio_map+offset) & ~(7<<shift)) | (1<<shift);
+        else  // direction == INPUT
+            *(gpio_map+offset) = (*(gpio_map+offset) & ~(7<<shift));
+    }
 }
 
 // Contribution by Eric Ptak <trouch@trouch.com>
 int gpio_function(int gpio)
 {
-    int offset = FSEL_OFFSET + (gpio/10);
-    int shift = (gpio%10)*3;
-    int value = *(gpio_map+offset);
-    value >>= shift;
-    value &= 7;
-    return value; // 0=input, 1=output, 4=alt0
+    if (odroid_found) {
+        int shift = gpioToShiftReg(gpio);
+        int value = (*(gpio_map + gpioToGPFSELReg(gpio)) & (1 << gpioToShiftReg(gpio)));
+        value >>= shift;
+        return ~value & 1; // 0=input, 1=output
+    }
+    else {
+        int offset = FSEL_OFFSET + (gpio/10);
+        int shift = (gpio%10)*3;
+        int value = *(gpio_map+offset);
+        value >>= shift;
+        value &= 7;
+        return value; // 0=input, 1=output, 4=alt0
+    }
 }
 
 void output_gpio(int gpio, int value)
 {
-    int offset, shift;
+    if (odroid_found) {
+        if (value) // value == HIGH
+            *(gpio_map + gpioToGPSETReg(gpio)) |=  (1 << gpioToShiftReg(gpio));
+        else       // value == LOW
+            *(gpio_map + gpioToGPSETReg(gpio)) &= ~(1 << gpioToShiftReg(gpio));
+    }
+    else {
+        int offset, shift;
 
-    if (value) // value == HIGH
-        offset = SET_OFFSET + (gpio/32);
-    else       // value == LOW
-       offset = CLR_OFFSET + (gpio/32);
+        if (value) // value == HIGH
+            offset = SET_OFFSET + (gpio/32);
+        else       // value == LOW
+        offset = CLR_OFFSET + (gpio/32);
 
-    shift = (gpio%32);
+        shift = (gpio%32);
 
-    *(gpio_map+offset) = 1 << shift;
+        *(gpio_map+offset) = 1 << shift;
+    }
 }
 
 int input_gpio(int gpio)
 {
-   int offset, value, mask;
+    if (odroid_found) {
+        return (*(gpio_map + gpioToGPLEVReg(gpio)) & (1 << gpioToShiftReg(gpio)));
+    }
+    else {
+        int offset, value, mask;
 
-   offset = PINLEVEL_OFFSET + (gpio/32);
-   mask = (1 << gpio%32);
-   value = *(gpio_map+offset) & mask;
-   return value;
+        offset = PINLEVEL_OFFSET + (gpio/32);
+        mask = (1 << gpio%32);
+        value = *(gpio_map+offset) & mask;
+        return value;
+    }
 }
 
 void cleanup(void)
