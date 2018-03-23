@@ -85,3 +85,7 @@ int get_gpio_number(int channel, unsigned int *gpio)
 
     return 0;
 }
+
+//!!!Original OdroidC port is mapping pi BCM numbers to
+//Odroid GPIO numbers so apps with hard coded pin numbers
+//will work without modification.  Do we want that?

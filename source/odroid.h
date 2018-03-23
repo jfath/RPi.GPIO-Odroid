@@ -175,7 +175,7 @@ static volatile uint32_t *gpio, *gpio1;
 // pinToGpio:
 //	Take a Wiring pin (0 through X) and re-map it to the BCM_GPIO pin
 //	Cope for 3 different board revisions here.
-
+//!!!Big problem - py_gpio sets pin_to_gpio declared in common.h
 static int *pinToGpio ;
 static int pin_array_count;
 
@@ -417,17 +417,72 @@ static int physToGpioOdroidXU [64] =
 
 /* end wiringPi.c code */
 
+/* JF added */
+static volatile uint32_t *gpio_map_odroid[2];
+
 /* Non-static add extern definition below */
 int odroid_found;
 int  piModel;
-static volatile uint32_t *gpio_map_odroid[2];
+
+const int bcmToOGpioOdroidC[64] = {	// BCM ModE
+     -1,  -1,  -1,  -1,  83, 101, 100, 118, // 0..7
+    117, 106, 107, 105,  99, 108,  -1,  -1, // 8..15
+     98,  88,  87,  97,  -1,  -1, 115, 104, // 16..23
+    102, 103,  -1, 116,  -1,  -1,  -1,  -1, // 24..31
+// Padding:
+     -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 32..39
+     -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 40..47
+     -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 48..55
+     -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1  // 56..63
+};
+
+const int bcmToOGpioOdroidC2[64] = {	// BCM ModE
+     -1,  -1,  -1,  -1, 249, 228, 219, 225, // 0..7
+    229, 232, 235, 230, 224, 234,  -1,  -1, // 8..15
+    218, 247, 238, 214,  -1,  -1, 237, 236, // 16..23
+    233, 231,  -1, 239,  -1,  -1,  -1,  -1, // 24..31
+// Padding:
+     -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 32..39
+     -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 40..47
+     -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 48..55
+     -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1  // 56..63
+};
+
+const int bcmToOGpioOdroidXU[64] = {	// BCM ModE
+     -1,  -1,  -1,  -1,  18,  28,  30,  25, // 0..7
+    190, 191, 192, 189,  29,  31,  -1,  -1, // 8..15
+     33, 174, 173,  -1,  -1,  -1,  22,  19, // 16..23
+     23,  24,  -1,  21,  -1,  -1,  -1,  -1, // 24..31
+// Padding:
+     -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 32..39
+     -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 40..47
+     -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 48..55
+     -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1  // 56..63
+};
+
+const int bcmToOGpioRPi[64] = {	// BCM ModE
+      0,   1,   2,   3,   4,   5,   6,   7, // 0..7
+      8,   8,  10,  11,  12,  13,  14,  15, // 8..15
+     16,  17,  16,  19,  20,  21,  22,  23, // 16..23
+     24,  25,  26,  27,  28,  29,  30,  31, // 24..31
+// Padding:
+     32,  33,  34,  35,  36,  37,  38,  39, // 32..39
+     40,  41,  42,  43,  44,  45,  46,  47, // 40..47
+     48,  49,  50,  51,  52,  53,  54,  55, // 48..55
+     56,  57,  58,  59,  60,  61,  62,  63  // 56..63
+};
+
+const int (*bcm_to_odroidgpio)[64];
 
 
 #else /* DEFINE_ODROID_VARS */
 
 extern int odroid_found;
 extern int  piModel;
-
+extern const int bcmToOGpioOdroidC[64];
+extern const int bcmToOGpioOdroidC2[64];
+extern const int bcmToOGpioOdroidXU[64];
+extern const int (*bcm_to_ogpio)[64];
 
 #endif /* DEFINE_ODROID_VARS */
 

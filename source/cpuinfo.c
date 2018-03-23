@@ -54,19 +54,39 @@ int get_rpi_info(rpi_info *info)
           if (strcmp(hardware, "ODROIDC") == 0) {
               piModel = PI_MODEL_ODROIDC;
               odroid_found = found = 1;
+              info->type = "ODROID-C1/C1+";
+              info->p1_revision = 3;
+              info->ram = "1024M";
+              info->manufacturer = "Hardkernel";
+              info->processor = "AMLS805";
           }
           else if (strcmp(hardware, "ODROID-C2") == 0) {
               piModel = PI_MODEL_ODROIDC2;
               odroid_found = found = 1;
+              info->p1_revision = 3;
+              info->type = "ODROID-C2";
+              info->ram = "1024M";
+              info->manufacturer = "Hardkernel";
+              info->processor = "AMLS905";
           }
           else if (strcmp(hardware, "ODROID-XU4") == 0) {
               piModel = PI_MODEL_ODROIDXU_34;
               odroid_found = found = 1;
+              info->type = "ODROID-XU3/4";
+              info->p1_revision = 3;
+              info->ram = "2048M";
+              info->manufacturer = "Hardkernel";
+              info->processor = "EXY5422";
           }
       }
       sscanf(buffer, "Revision	: %s", revision);
    }
    fclose(fp);
+
+    if (odroid_found) {
+        strcpy(info->revision, revision);
+        return 0;
+    }
 
    if (!found)
       return -1;

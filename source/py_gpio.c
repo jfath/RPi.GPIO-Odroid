@@ -131,7 +131,7 @@ static PyObject *py_cleanup(PyObject *self, PyObject *args, PyObject *kwargs)
          // set everything back to input
          for (i=0; i<54; i++) {
             if (gpio_direction[i] != -1) {
-               setup_gpio(i, INPUT, PUD_OFF);
+               setup_gpio(*(bcm_to_odroidgpio+i), INPUT, PUD_OFF);
                gpio_direction[i] = -1;
                found = 1;
             }
@@ -569,8 +569,15 @@ static unsigned int chan_from_gpio(unsigned int gpio)
    int chan;
    int chans;
 
-   if (gpio_mode == BCM)
-      return gpio;
+   if (gpio_mode == BCM) {
+      if (strstr(rpiinfo.type, "ODROID")) {
+        for (chan=1; chan<41; chan++)
+            if (*(bcm_to_odroidgpio+chan) == gpio)
+                return chan;
+        return -1;
+      }
+      else return gpio;
+   }
    if (rpiinfo.p1_revision == 0)   // not applicable for compute module
       return -1;
    else if (rpiinfo.p1_revision == 1 || rpiinfo.p1_revision == 2)
@@ -1022,13 +1029,30 @@ PyMODINIT_FUNC init_GPIO(void)
                               "RAM",rpiinfo.ram);
    PyModule_AddObject(module, "RPI_INFO", board_info); 
 
-   if (rpiinfo.p1_revision == 1) {
-      pin_to_gpio = &pin_to_gpio_rev1;
-   } else if (rpiinfo.p1_revision == 2) {
-      pin_to_gpio = &pin_to_gpio_rev2;
-   } else { // assume model B+ or A+ or 2B
-      pin_to_gpio = &pin_to_gpio_rev3;
-   }
+    if (strstr(rpiinfo.type, "ODROID")) {
+        if (strcmp(rpiinfo.type, "ODROID-C1/C1+") == 0) {
+            pin_to_gpio = &physToGpioOdroidC;
+            bcm_to_odroidgpio = &bcmToOGpioOdroidC;
+        }
+        else if (strcmp(rpiinfo.type, "ODROID-C2") == 0) {
+            pin_to_gpio = &physToGpioOdroidC2_Rev1_1;
+            bcm_to_odroidgpio = &bcmToOGpioOdroidC;
+        }
+        else if (strcmp(rpiinfo.type, "ODROID-XU3/4") == 0) {
+            pin_to_gpio = &physToGpioOdroidXU;
+            bcm_to_odroidgpio = &bcmToOGpioOdroidC;
+        }
+    }
+    else {
+        bcm_to_odroidgpio = &bcmToOGpioRPi;  //odroid patch
+        if (rpiinfo.p1_revision == 1) {
+            pin_to_gpio = &pin_to_gpio_rev1;
+        } else if (rpiinfo.p1_revision == 2) {
+            pin_to_gpio = &pin_to_gpio_rev2;
+        } else { // assume model B+ or A+ or 2B
+            pin_to_gpio = &pin_to_gpio_rev3;
+        }
+    }
 
    rpi_revision = Py_BuildValue("i", rpiinfo.p1_revision);     // deprecated
    PyModule_AddObject(module, "RPI_REVISION", rpi_revision);   // deprecated
