@@ -27,6 +27,7 @@ SOFTWARE.
 #include "cpuinfo.h"
 #include "constants.h"
 #include "common.h"
+#include "odroid.h"
 
 static PyObject *rpi_revision; // deprecated
 static PyObject *board_info;
@@ -1036,15 +1037,15 @@ PyMODINIT_FUNC init_GPIO(void)
         }
         else if (strcmp(rpiinfo.type, "ODROID-C2") == 0) {
             pin_to_gpio = &physToGpioOdroidC2_Rev1_1;
-            bcm_to_odroidgpio = &bcmToOGpioOdroidC;
+            bcm_to_odroidgpio = &bcmToOGpioOdroidC2;
         }
         else if (strcmp(rpiinfo.type, "ODROID-XU3/4") == 0) {
             pin_to_gpio = &physToGpioOdroidXU;
-            bcm_to_odroidgpio = &bcmToOGpioOdroidC;
+            bcm_to_odroidgpio = &bcmToOGpioOdroidXU;
         }
     }
     else {
-        bcm_to_odroidgpio = &bcmToOGpioRPi;  //odroid patch
+        bcm_to_odroidgpio = &bcmToOGpioRPi;  //1:1 mapping
         if (rpiinfo.p1_revision == 1) {
             pin_to_gpio = &pin_to_gpio_rev1;
         } else if (rpiinfo.p1_revision == 2) {

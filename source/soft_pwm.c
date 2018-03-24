@@ -25,6 +25,7 @@ SOFTWARE.
 #include <time.h>
 #include "c_gpio.h"
 #include "soft_pwm.h"
+#include "odroid.h"
 pthread_t threads;
 
 struct pwm
@@ -91,31 +92,24 @@ void *pwm_thread(void *threadarg)
 {
     struct pwm *p = (struct pwm *)threadarg;
 
-    //!!!This patch was in original C1 port.  It seems
-    //the pwm gpio is always specified as a physical pin
-    //number.  Is that correct??
-    int gpio_out;
-    if (odroid_found) gpio_out = *(pinToGpio + p->gpio);
-    else gpio_out = p->gpio;
- 
     while (p->running)
     {
 
         if (p->dutycycle > 0.0)
         {
-            output_gpio(gpio_out, 1);
+            output_gpio(*(bcm_to_odroidgpio + p->gpio), 1);
             full_sleep(&p->req_on);
         }
 
         if (p->dutycycle < 100.0)
         {
-            output_gpio(gpio_out, 0);
+            output_gpio(*(bcm_to_odroidgpio + p->gpio), 0);
             full_sleep(&p->req_off);
         }
     }
 
     // clean up
-    output_gpio(gpio_out, 0);
+    output_gpio(*(bcm_to_odroidgpio + p->gpio), 0);
     remove_pwm(p->gpio);
     pthread_exit(NULL);
 }

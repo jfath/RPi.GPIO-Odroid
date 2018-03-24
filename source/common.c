@@ -23,6 +23,7 @@ SOFTWARE.
 #include "Python.h"
 #include "c_gpio.h"
 #include "common.h"
+#include "odroid.h"
 
 int gpio_mode = MODE_UNKNOWN;
 const int pin_to_gpio_rev1[41] = {-1, -1, -1, 0, -1, 1, -1, 4, 14, -1, 15, 17, 18, 21, -1, 22, 23, -1, 24, 10, -1, 9, 25, 11, 8, -1, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
@@ -49,6 +50,9 @@ int check_gpio_priv(void)
     return 0;
 }
 
+//!!!odroid port of this funtion passes an extra parm
+//unsigned int *bcm_gpio and sets the value
+//need to figure out why and change everywhere is needed
 int get_gpio_number(int channel, unsigned int *gpio)
 {
     // check setmode() has been run
