@@ -361,11 +361,12 @@ int wiringPiSetupOdroid (void)
 
     //wiringPi pin numbers are unused in rPI.GPIO
     pinToGpio = NULL;
+    pin_array_count = 0;
+    //physToGPIO replaced by pin_to_gpio rPI.GPIO
+    physToGpio = NULL;
 
     if (piModel == PI_MODEL_ODROIDC)
     {
-        //phyToGpio unused in RPi.GPIO, we use pin_to_gpio
-        physToGpio = physToGpioOdroidC;
 
         // GPIO:
 
@@ -381,15 +382,6 @@ int wiringPiSetupOdroid (void)
     }
     else if (piModel == PI_MODEL_ODROIDC2)
     {
-
-        if (0)
-        { //no old dev board supprt was:(rev == PI_VERSION_1)
-            physToGpio = physToGpioOdroidC2_Rev1_0;
-        }
-        else
-        {
-            physToGpio = physToGpioOdroidC2_Rev1_1;
-        }
 
         // GPIO:
         gpio = (uint32_t *)mmap(0, BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, ODROIDC2_GPIO_BASE);
@@ -423,8 +415,6 @@ int wiringPiSetupOdroid (void)
             piAinNode0_xu = "/sys/devices/12d10000.adc/iio:device0/in_voltage0_raw";
             piAinNode1_xu = "/sys/devices/12d10000.adc/iio:device0/in_voltage3_raw";
         }
-
-        physToGpio = physToGpioOdroidXU;
 
         // GPIO:
         //#define ODROIDXU_GPX_BASE   0x13400000  // GPX0,1,2,3
