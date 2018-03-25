@@ -50,9 +50,12 @@ int check_gpio_priv(void)
     return 0;
 }
 
-//!!!odroid port of this funtion passes an extra parm
-//unsigned int *bcm_gpio and sets the value
-//need to figure out why and change everywhere is needed
+//In original odroidc port, bcm_gpio gets bcm rpi specific
+//value and gpio gets odroid gpio value
+//bcm_gpio was used only as index to gpio_direction array
+//I have expanded gpio direction to allow for indexing using
+//native gpio numbers and used native gpio as index exerywhere
+
 int get_gpio_number(int channel, unsigned int *gpio)
 {
     // check setmode() has been run
@@ -90,6 +93,3 @@ int get_gpio_number(int channel, unsigned int *gpio)
     return 0;
 }
 
-//!!!Original OdroidC port is mapping pi BCM numbers to
-//Odroid GPIO numbers so apps with hard coded pin numbers
-//will work without modification.  Do we want that?

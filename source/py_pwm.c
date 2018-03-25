@@ -62,6 +62,8 @@ static int PWM_init(PWMObject *self, PyObject *args, PyObject *kwds)
 
     self->freq = frequency;
 
+    //!!!Original odroid port passed rpi BCM number I'm
+    //passing native GPIO number
     pwm_set_frequency(self->gpio, self->freq);
     return 0;
 }

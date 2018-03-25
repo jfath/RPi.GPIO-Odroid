@@ -130,9 +130,9 @@ static PyObject *py_cleanup(PyObject *self, PyObject *args, PyObject *kwargs)
          event_cleanup_all();
 
          // set everything back to input
-         for (i=0; i<54; i++) {
+         for (i=0; i<=MAXGPIOCOUNT; i++) {  //odroid patch
             if (gpio_direction[i] != -1) {
-               setup_gpio(*(bcm_to_odroidgpio+i), INPUT, PUD_OFF);
+               setup_gpio(i, INPUT, PUD_OFF);
                gpio_direction[i] = -1;
                found = 1;
             }
@@ -1007,7 +1007,7 @@ PyMODINIT_FUNC init_GPIO(void)
 
    define_constants(module);
 
-   for (i=0; i<54; i++)
+   for (i=0; i<=MAXGPIOCOUNT; i++)  //odroid patch
       gpio_direction[i] = -1;
 
    // detect board revision and set up accordingly

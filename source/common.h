@@ -31,11 +31,13 @@ SOFTWARE.
 #define PWM          43
 
 int gpio_mode;
-const int pin_to_gpio_rev1[41];
-const int pin_to_gpio_rev2[41];
-const int pin_to_gpio_rev3[41];
-const int (*pin_to_gpio)[41];
-int gpio_direction[54];
+#define MAXPINCOUNT 40  //odroid added
+const int pin_to_gpio_rev1[MAXPINCOUNT+1];
+const int pin_to_gpio_rev2[MAXPINCOUNT+1];
+const int pin_to_gpio_rev3[MAXPINCOUNT+1];
+const int (*pin_to_gpio)[MAXPINCOUNT+1];
+#define MAXGPIOCOUNT 255  //odroid added
+int gpio_direction[MAXGPIOCOUNT+1];  //odroid change 54->255 to accommodate XU4 gpio numbers as index
 rpi_info rpiinfo;
 int setup_error;
 int module_setup;

@@ -175,7 +175,6 @@ static volatile uint32_t *gpio, *gpio1;
 // pinToGpio:
 //	Take a Wiring pin (0 through X) and re-map it to the BCM_GPIO pin
 //	Cope for 3 different board revisions here.
-//!!!Big problem - py_gpio sets pin_to_gpio declared in common.h
 static int *pinToGpio ;
 static int pin_array_count;
 

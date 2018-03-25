@@ -30,6 +30,7 @@ SOFTWARE.
 #include <string.h>
 #include <sys/time.h>
 #include "event_gpio.h"
+#include "common.h"
 #include "odroid.h"
 
 
@@ -60,7 +61,7 @@ struct callback
 struct callback *callbacks = NULL;
 
 pthread_t threads;
-int event_occurred[54] = { 0 };
+int event_occurred[MAXGPIOCOUNT+1] = { 0 };  //odroid patch
 int thread_running = 0;
 int epfd_thread = -1;
 int epfd_blocking = -1;

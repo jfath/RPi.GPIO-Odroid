@@ -94,22 +94,25 @@ void *pwm_thread(void *threadarg)
 
     while (p->running)
     {
-
+        //original odroic c port was storing gpio as pi bcm
+        //number and using *(bcm_to_odroidgpio + p->gpio to
+        //access.  We're storing as native GPIO number so
+        //no odroid patch required
         if (p->dutycycle > 0.0)
         {
-            output_gpio(*(bcm_to_odroidgpio + p->gpio), 1);
+            output_gpio(p->gpio, 1);
             full_sleep(&p->req_on);
         }
 
         if (p->dutycycle < 100.0)
         {
-            output_gpio(*(bcm_to_odroidgpio + p->gpio), 0);
+            output_gpio(p->gpio, 0);
             full_sleep(&p->req_off);
         }
     }
 
     // clean up
-    output_gpio(*(bcm_to_odroidgpio + p->gpio), 0);
+    output_gpio(p->gpio, 0);
     remove_pwm(p->gpio);
     pthread_exit(NULL);
 }
