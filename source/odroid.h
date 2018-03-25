@@ -229,7 +229,12 @@ static int pinToGpioOdroidC [64] = {
 // physToGpio:
 //	Take a physical pin (1 through 40) and re-map it to the ODROID_GPIO pin
 //
-/*odroid static*/ int physToGpioOdroidC [64] =
+//!!!Odroid - don't know why wiringPi code uses
+//array size of 64 instead of 41.  Causes incompatible
+//pointer warning on compile.  Also need to access
+//from other files, so changed static int to
+//const int
+/*odroid static int */const int physToGpioOdroidC [64] =
 {
   -1,       // 0
   -1,  -1,	// 1, 2
@@ -289,7 +294,7 @@ static int pinToGpioOdroidC2_Rev1_0 [64] = {
 // physToGpio:
 //	Take a physical pin (1 through 40) and re-map it to the ODROIDC2_GPIO pin
 //
-/*odroid static*/ int physToGpioOdroidC2_Rev1_1 [64] =
+/*odroid static int*/const int physToGpioOdroidC2_Rev1_1 [64] =
 {
   -1,       // 0
   -1,  -1,	// 1, 2
@@ -321,7 +326,7 @@ static int pinToGpioOdroidC2_Rev1_0 [64] = {
 } ;
 
 
-/*odroid static*/ int physToGpioOdroidC2_Rev1_0 [64] =
+/*odroid static int*/const int physToGpioOdroidC2_Rev1_0 [64] =
 {
   -1,       // 0
   -1,  -1,	// 1, 2
@@ -384,7 +389,7 @@ static int pinToGpioOdroidXU [64] = {
 // physToGpio:
 //	Take a physical pin (1 through 40) and re-map it to the ODROIDXU_GPIO pin
 //
-/*odroid static*/ int physToGpioOdroidXU [64] =
+/*odroid static int*/const int physToGpioOdroidXU [64] =
 {
     -1,         //  0
     -1,  -1,	//  1 |  2 : 3.3V, 5.0V
@@ -478,9 +483,9 @@ const int (*bcm_to_odroidgpio)[64];
 
 extern int odroid_found;
 extern int  piModel;
-extern int physToGpioOdroidC[64];
-extern int physToGpioOdroidC2_Rev1_1[64];
-extern int physToGpioOdroidXU[64];
+extern const int physToGpioOdroidC[64];
+extern const int physToGpioOdroidC2_Rev1_1[64];
+extern const int physToGpioOdroidXU[64];
 extern const int bcmToOGpioOdroidC[64];
 extern const int bcmToOGpioOdroidC2[64];
 extern const int bcmToOGpioOdroidXU[64];
