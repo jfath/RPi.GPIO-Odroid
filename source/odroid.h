@@ -175,15 +175,15 @@ static volatile uint32_t *gpio, *gpio1;
 // pinToGpio:
 //	Take a Wiring pin (0 through X) and re-map it to the BCM_GPIO pin
 //	Cope for 3 different board revisions here.
-static int *pinToGpio ;
-static int pin_array_count;
+//static int *pinToGpio ;
+//static int pin_array_count;
 
 // physToGpio:
 //	Take a physical pin (1 through 26) and re-map it to the BCM_GPIO pin
 //	Cope for 2 different board revisions here.
 //	Also add in the P5 connector, so the P5 pins are 3,4,5,6, so 53,54,55,56
 
-static int *physToGpio ;
+//static int *physToGpio ;
 
 static char *piAinNode0_xu;
 static char *piAinNode1_xu;
@@ -229,11 +229,8 @@ static int pinToGpioOdroidC [64] = {
 // physToGpio:
 //	Take a physical pin (1 through 40) and re-map it to the ODROID_GPIO pin
 //
-//!!!Odroid - don't know why wiringPi code uses
-//array size of 64 instead of 41.  Causes incompatible
-//pointer warning on compile.  Also need to access
-//from other files, so changed static int to
-//const int
+//!!!Odroid - don't know why wiringPi code uses array size of 64 instead of 41.
+//Also need to access from other files, so changed static int to const int
 /*odroid static int */const int physToGpioOdroidC [64] =
 {
   -1,       // 0

@@ -201,7 +201,7 @@ static int  gpioToPUENReg (int pin)
 		if(pin >= GPIOY_PIN_START && pin <= GPIOY_PIN_END)
 			return  GPIOY_PUEN_REG_OFFSET;
 	}
-    //!!!No odroid XU4 Pull up/down Enable register?? The -1 causes seg fault
+    //No odroid XU4 Pull up/down Enable register
     return  -1;
 }
 
@@ -338,7 +338,7 @@ int wiringPiSetupOdroid (void)
     {
         if ((fd = open("/dev/gpiomem", O_RDWR | O_SYNC | O_CLOEXEC)) < 0)
             return wiringPiFailure(WPI_ALMOST, "wiringPiSetup: Unable to open /dev/gpiomem: %s\n", strerror(errno));
-        PyErr_WarnEx(NULL, "wiringPiSetupOdroid: /dev/gpiomem opened", 1);  //!!!odroiddebug
+        PyErr_WarnEx(NULL, "wiringPiSetupOdroid: /dev/gpiomem opened", 1);  //!!odroiddebug
     }
     else
     {
@@ -347,7 +347,7 @@ int wiringPiSetupOdroid (void)
 
         if ((fd = open("/dev/mem", O_RDWR | O_SYNC | O_CLOEXEC)) < 0)
             return wiringPiFailure(WPI_ALMOST, "wiringPiSetup: Unable to open /dev/mem: %s\n", strerror(errno));
-        PyErr_WarnEx(NULL, "wiringPiSetupOdroid: /dev/mem opened", 1);  //!!!odroiddebug
+        PyErr_WarnEx(NULL, "wiringPiSetupOdroid: /dev/mem opened", 1);  //!!odroiddebug
     }
 
     //  piBoardId (&model, &rev, &mem, &maker, &overVolted) ;
@@ -572,7 +572,6 @@ void pullUpDnControlOdroid (int pin, int pud)
 
 int digitalReadOdroid (int pin)
 {
-    char c;
 
     if (piModel == PI_MODEL_ODROIDC || piModel == PI_MODEL_ODROIDC2)
     {
@@ -590,6 +589,8 @@ int digitalReadOdroid (int pin)
     }
     else
         wiringPiFailure(WPI_FATAL, "digitalReadOdroid: This code should only be called for Odroid\n");
+
+    return 0;
 }
 
 /*
@@ -643,7 +644,7 @@ int analogReadOdroid (int pin)
         0,
     };
 
-    //!!!odroid this function expects pin #0 or #1
+    //!!!odroid analogRead expects pin #0 or #1
     if (piModel == PI_MODEL_ODROIDC ||
         piModel == PI_MODEL_ODROIDC2 ||
         piModel == PI_MODEL_ODROIDXU_34)
@@ -659,6 +660,8 @@ int analogReadOdroid (int pin)
     }
     else
         wiringPiFailure(WPI_FATAL, "analogReadOdroid: This code should only be called for Odroid\n");
+
+    return 0;
 }
 
 /*
@@ -673,3 +676,36 @@ void analogWriteOdroid (int pin, int value)
 {
             wiringPiFailure(WPI_FATAL, "analogWriteOdroid: No DAC on Odroid\n");
 }
+
+/*
+ * pinGetModeOdroid:
+ *	Gets the mode of a pin to be input, output
+ * Added by JF
+ *********************************************************************************
+ */
+
+int pinGetModeOdroid (int pin)
+{
+    int shift;
+    int rwbit;
+    //Odroid: pin comes in as gpio
+
+    if (piModel == PI_MODEL_ODROIDC || piModel == PI_MODEL_ODROIDC2) {
+        rwbit = (*(gpio + gpioToGPFSELReg(pin))) & (1 << gpioToShiftReg(pin));
+        return (rwbit!=0) ? INPUT : OUTPUT;
+    }
+    else if (piModel == PI_MODEL_ODROIDXU_34)
+    {
+        shift = (gpioToShiftReg(pin) * 4);
+        if (pin < 100)
+            rwbit = (*(gpio + gpioToGPFSELReg(pin))) & (0x1 << shift);
+        else
+            rwbit = (*(gpio1 + gpioToGPFSELReg(pin))) & (0x1 << shift);
+        return (rwbit!=0) ? OUTPUT : INPUT; 
+    }
+    else
+        wiringPiFailure(WPI_FATAL, "pinGetModeOdroid: This code should only be called for Odroid\n");
+
+    return INPUT;
+}
+

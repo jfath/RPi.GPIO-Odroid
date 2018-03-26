@@ -241,7 +241,7 @@ void set_low_event(int gpio, int enable)
 
 void set_pullupdn(int gpio, int pud)
 {
-    {     //!!!odroiddebug
+    {     //!!odroiddebug
         char buf[256];
         sprintf(buf, "set_pullupdn: gpio=%i pud=%i", gpio, pud);
         PyErr_WarnEx(NULL, buf, 1);
@@ -266,14 +266,14 @@ void set_pullupdn(int gpio, int pud)
         *(gpio_map+PULLUPDN_OFFSET) &= ~3;
         *(gpio_map+clk_offset) = 0;
     }
-    {     //!!!odroiddebug
+    {     //!!odroiddebug
         PyErr_WarnEx(NULL, "set_pullupdn: Done", 1);
     }
 }
 
 void setup_gpio(int gpio, int direction, int pud)
 {
-    {     //!!!odroiddebug
+    {     //!!odroiddebug
         char buf[256];
         sprintf(buf, "setup_gpio: gpio=%i, dirout=%i, pud=%i", gpio, (direction==OUTPUT) ? 1:0, pud);
         PyErr_WarnEx(NULL, buf, 1);
@@ -292,7 +292,7 @@ void setup_gpio(int gpio, int direction, int pud)
         else  // direction == INPUT
             *(gpio_map+offset) = (*(gpio_map+offset) & ~(7<<shift));
     }
-    {     //!!!odroiddebug
+    {     //!!odroiddebug
         PyErr_WarnEx(NULL, "setup_gpio: Done", 1);
     }
 }
@@ -300,12 +300,11 @@ void setup_gpio(int gpio, int direction, int pud)
 // Contribution by Eric Ptak <trouch@trouch.com>
 int gpio_function(int gpio)
 {
-    {     //!!!odroiddebug
+    {     //!!odroiddebug
         PyErr_WarnEx(NULL, "gpio_function: Start", 1);
     }
     if (odroid_found) {
-        //!!!odroid read current input/output state
-        return 0; // 0=input, 1=output
+        return pinGetModeOdroid(gpio);
     }
     else {
         int offset = FSEL_OFFSET + (gpio/10);
@@ -319,7 +318,7 @@ int gpio_function(int gpio)
 
 void output_gpio(int gpio, int value)
 {
-    {     //!!!odroiddebug
+    {     //!!odroiddebug
         char buf[256];
         sprintf(buf, "output_gpio: gpio=%i, val=%i", gpio, value);
         PyErr_WarnEx(NULL, buf, 1);
@@ -344,9 +343,9 @@ void output_gpio(int gpio, int value)
 
 int input_gpio(int gpio)
 {
-    {     //!!!odroiddebug
+    {     //!!odroiddebug
         char buf[256];
-        sprintf(buf, "input_gpio: gpio=%i, val=%i", gpio);
+        sprintf(buf, "input_gpio: gpio=%i", gpio);
         PyErr_WarnEx(NULL, buf, 1);
     }
     if (odroid_found) {

@@ -203,7 +203,7 @@ static PyObject *py_setup_channel(PyObject *self, PyObject *args, PyObject *kwar
          return 0;
 
       func = gpio_function(gpio);
-    {     //!!!odroiddebug
+    {     //!!odroiddebug
         char buf[256];
         sprintf(buf, "gpio=%d, func=%i, gpio_direction=%i", gpio, func, gpio_direction[gpio]);
         PyErr_WarnEx(NULL, buf, 1);
@@ -1035,7 +1035,7 @@ PyMODINIT_FUNC init_GPIO(void)
                               "RAM",rpiinfo.ram);
    PyModule_AddObject(module, "RPI_INFO", board_info); 
 
-    {     //!!!odroiddebug
+    {     //!!odroiddebug
         char buf[256];
         sprintf(buf, "manu=%s, type=%s", rpiinfo.manufacturer, rpiinfo.type);
         PyErr_WarnEx(NULL, buf, 1);
