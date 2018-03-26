@@ -62,6 +62,13 @@
 #include <unistd.h>
 #include <sys/utsname.h>
 
+
+//****************************************************************************************************
+
+/*
+* Code copied directly from Hardkernel's wiringPi port
+*/
+
 int wiringPiFailure (int fatal, const char *message, ...)
 {
   va_list argp ;
@@ -78,24 +85,6 @@ int wiringPiFailure (int fatal, const char *message, ...)
   exit (EXIT_FAILURE) ;
 
   return 0 ;
-}
-
-static int gpioToPin(int gpio)
-{
-	int pin;
-
-	if (pinToGpio == NULL) {
-		(void)wiringPiFailure (WPI_FATAL, "%s: wiringPi is not initialized yet\n", __func__);
-		return -1;
-	}
-
-	for (pin = 0; pin < pin_array_count; ++pin) {
-		if (pinToGpio[pin] == gpio)
-			return pin;
-	}
-
-	(void)wiringPiFailure (WPI_FATAL, "%s: could not find the pin of %d gpio\n", __func__, gpio);
-	return -1;
 }
 
 //
@@ -333,6 +322,8 @@ static int  gpioToGPFSELReg (int pin)
     return  -1;
 }
 
+//***************************************************************************************************
+
 /*
 * Note: Unlike the above code, this is not copied directly from wiringPi
 * Much of the code is identical, but un-necessary parts are deleted
@@ -364,7 +355,7 @@ int wiringPiSetupOdroid (void)
     //wiringPi pin numbers are unused in rPI.GPIO
     pinToGpio = NULL;
     pin_array_count = 0;
-    //physToGPIO replaced by pin_to_gpio rPI.GPIO
+    //physToGPIO replaced by pin_to_gpio in rPI.GPIO
     physToGpio = NULL;
 
     if (piModel == PI_MODEL_ODROIDC)
@@ -437,6 +428,245 @@ int wiringPiSetupOdroid (void)
     }
 
     return 0;
+}
+
+
+/*
+ * pinMode:
+ *	Sets the mode of a pin to be input, output or PWM output
+ *********************************************************************************
+ */
+
+void pinModeOdroid (int pin, int mode)
+{
+    int fSel, shift, alt;
+    //Odroid: For our purposes pin comes in as gpio, original code converted
+    //pin to gpio and kept origPin as pin#
+
+    fSel = gpioToGPFSEL[pin];
+    shift = gpioToShift[pin];
+
+    if (mode == INPUT)
+    {
+        if (piModel == PI_MODEL_ODROIDC || piModel == PI_MODEL_ODROIDC2)
+            *(gpio + gpioToGPFSELReg(pin)) = (*(gpio + gpioToGPFSELReg(pin)) | (1 << gpioToShiftReg(pin)));
+        else if (piModel == PI_MODEL_ODROIDXU_34)
+        {
+            shift = (gpioToShiftReg(pin) * 4);
+            if (pin < 100)
+                *(gpio + gpioToGPFSELReg(pin)) &= ~(0xF << shift);
+            else
+                *(gpio1 + gpioToGPFSELReg(pin)) &= ~(0xF << shift);
+        }
+        else
+            wiringPiFailure(WPI_FATAL, "pinModeOdroid: This code should only be called for Odroid\n");
+    }
+    else if (mode == OUTPUT)
+    {
+        if (piModel == PI_MODEL_ODROIDC || piModel == PI_MODEL_ODROIDC2)
+            *(gpio + gpioToGPFSELReg(pin)) = (*(gpio + gpioToGPFSELReg(pin)) & ~(1 << gpioToShiftReg(pin)));
+        else if (piModel == PI_MODEL_ODROIDXU_34)
+        {
+            shift = (gpioToShiftReg(pin) * 4);
+            if (pin < 100)
+            {
+                *(gpio + gpioToGPFSELReg(pin)) &= ~(0xF << shift);
+                *(gpio + gpioToGPFSELReg(pin)) |= (0x1 << shift);
+            }
+            else
+            {
+                *(gpio1 + gpioToGPFSELReg(pin)) &= ~(0xF << shift);
+                *(gpio1 + gpioToGPFSELReg(pin)) |= (0x1 << shift);
+            }
+        }
+        else
+            wiringPiFailure(WPI_FATAL, "pinModeOdroid: This code should only be called for Odroid\n");
+    }
+    else if (mode == SOFT_PWM_OUTPUT)
+    {
+        if (piModel == PI_MODEL_ODROIDC ||
+            piModel == PI_MODEL_ODROIDC2 ||
+            piModel == PI_MODEL_ODROIDXU_34)
+            softPwmCreate(pin, 0, 100);
+        else
+            wiringPiFailure(WPI_FATAL, "pinModeOdroid: This code should only be called for Odroid\n");
+    }
+}
+
+
+/*
+ * pullUpDownCtrl:
+ *	Control the internal pull-up/down resistors on a GPIO pin
+ *	The Arduino only has pull-ups and these are enabled by writing 1
+ *	to a port when in input mode - this paradigm doesn't quite apply
+ *	here though.
+ *********************************************************************************
+ */
+
+void pullUpDnControlOdroid (int pin, int pud)
+{
+    if (piModel == PI_MODEL_ODROIDC || piModel == PI_MODEL_ODROIDC2)
+    {
+
+        if (pud)
+        {
+            // Enable Pull/Pull-down resister
+            *(gpio + gpioToPUENReg(pin)) = (*(gpio + gpioToPUENReg(pin)) | (1 << gpioToShiftReg(pin)));
+
+            if (pud == PUD_UP)
+                *(gpio + gpioToPUPDReg(pin)) = (*(gpio + gpioToPUPDReg(pin)) | (1 << gpioToShiftReg(pin)));
+            else
+                *(gpio + gpioToPUPDReg(pin)) = (*(gpio + gpioToPUPDReg(pin)) & ~(1 << gpioToShiftReg(pin)));
+        }
+        else // Disable Pull/Pull-down resister
+            *(gpio + gpioToPUENReg(pin)) = (*(gpio + gpioToPUENReg(pin)) & ~(1 << gpioToShiftReg(pin)));
+    }
+    else if (piModel == PI_MODEL_ODROIDXU_34)
+    {
+        int shift = 0;
+
+        shift = (gpioToShiftReg(pin) * 2);
+
+        if (pud)
+        {
+            if (pin < 100)
+            {
+                *(gpio + gpioToPUPDReg(pin)) &= ~(0x3 << shift);
+                if (pud == PUD_UP)
+                    *(gpio + gpioToPUPDReg(pin)) |= (0x3 << shift);
+                else
+                    *(gpio + gpioToPUPDReg(pin)) |= (0x1 << shift);
+            }
+            else
+            {
+                *(gpio1 + gpioToPUPDReg(pin)) &= ~(0x3 << shift);
+                if (pud == PUD_UP)
+                    *(gpio1 + gpioToPUPDReg(pin)) |= (0x3 << shift);
+                else
+                    *(gpio1 + gpioToPUPDReg(pin)) |= (0x1 << shift);
+            }
+        }
+        else
+        {
+            // Disable Pull/Pull-down resister
+            if (pin < 100)
+                *(gpio + gpioToPUPDReg(pin)) &= ~(0x3 << shift);
+            else
+                *(gpio1 + gpioToPUPDReg(pin)) &= ~(0x3 << shift);
+        }
+    }
+    else
+        wiringPiFailure(WPI_FATAL, "pinModeOdroid: This code should only be called for Odroid\n");
+}
+
+/*
+ * digitalRead:
+ *	Read the value of a given Pin, returning HIGH or LOW
+ *********************************************************************************
+ */
+
+int digitalReadOdroid (int pin)
+{
+    char c;
+
+    if (piModel == PI_MODEL_ODROIDC || piModel == PI_MODEL_ODROIDC2)
+    {
+        if ((*(gpio + gpioToGPLEVReg(pin)) & (1 << gpioToShiftReg(pin))) != 0)
+            return HIGH;
+        else
+            return LOW;
+    }
+    else if (piModel == PI_MODEL_ODROIDXU_34)
+    {
+        if (pin < 100)
+            return *(gpio + gpioToGPLEVReg(pin)) & (1 << gpioToShiftReg(pin)) ? HIGH : LOW;
+        else
+            return *(gpio1 + gpioToGPLEVReg(pin)) & (1 << gpioToShiftReg(pin)) ? HIGH : LOW;
+    }
+    else
+        wiringPiFailure(WPI_FATAL, "pinModeOdroid: This code should only be called for Odroid\n");
+}
+
+/*
+ * digitalWrite:
+ *	Set an output bit
+ *********************************************************************************
+ */
+
+void digitalWriteOdroid (int pin, int value)
+{
+
+    if (piModel == PI_MODEL_ODROIDC || piModel == PI_MODEL_ODROIDC2)
+    {
+        if (value == LOW)
+            *(gpio + gpioToGPSETReg(pin)) &= ~(1 << gpioToShiftReg(pin));
+        else
+            *(gpio + gpioToGPSETReg(pin)) |= (1 << gpioToShiftReg(pin));
+    }
+    else if (piModel == PI_MODEL_ODROIDXU_34)
+    {
+        if (pin < 100)
+        {
+            if (value == LOW)
+                *(gpio + gpioToGPLEVReg(pin)) &= ~(1 << gpioToShiftReg(pin));
+            else
+                *(gpio + gpioToGPLEVReg(pin)) |= (1 << gpioToShiftReg(pin));
+        }
+        else
+        {
+            if (value == LOW)
+                *(gpio1 + gpioToGPLEVReg(pin)) &= ~(1 << gpioToShiftReg(pin));
+            else
+                *(gpio1 + gpioToGPLEVReg(pin)) |= (1 << gpioToShiftReg(pin));
+        }
+    }
+    else
+        wiringPiFailure(WPI_FATAL, "pinModeOdroid: This code should only be called for Odroid\n");
+}
+
+/*
+ * analogRead:
+ *	Read the analog value of a given Pin. 
+ *	There is no on-board Pi analog hardware,
+ *	so this needs to go to a new node.
+ *********************************************************************************
+ */
+
+int analogReadOdroid (int pin)
+{
+    unsigned char value[5] = {
+        0,
+    };
+
+    //!!!odroid this function expects pin #0 or #1
+    if (piModel == PI_MODEL_ODROIDC ||
+        piModel == PI_MODEL_ODROIDC2 ||
+        piModel == PI_MODEL_ODROIDXU_34)
+    {
+        if (pin < 2)
+        {
+            if (adcFds[pin] == -1)
+                return 0;
+            lseek(adcFds[pin], 0L, SEEK_SET);
+            read(adcFds[pin], &value[0], 4);
+            return atoi(value);
+        }
+    }
+    else
+        wiringPiFailure(WPI_FATAL, "pinModeOdroid: This code should only be called for Odroid\n");
+}
+
+/*
+ * analogWrite:
+ *	Write the analog value to the given Pin. 
+ *	There is no on-board Pi analog hardware,
+ *	so this needs to go to a new node.
+ *********************************************************************************
+ */
+
+void analogWriteOdroid (int pin, int value)
+{
+    //!!!odroid no dac on board
 }
 
 #else /* DEFINE_ODROID_CODE */
