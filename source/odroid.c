@@ -212,7 +212,7 @@ static int  gpioToPUENReg (int pin)
 		if(pin >= GPIOY_PIN_START && pin <= GPIOY_PIN_END)
 			return  GPIOY_PUEN_REG_OFFSET;
 	}
-
+    //!!!No odroid XU4 Pull up/down Enable register?? The -1 causes seg fault
     return  -1;
 }
 
@@ -335,7 +335,7 @@ static int  gpioToGPFSELReg (int pin)
 
 /*
 * Note: Unlike the above code, this is not copied directly from wiringPi
-* Much of the code is identical, but un-necessary part are deleted
+* Much of the code is identical, but un-necessary parts are deleted
 */
 
 int wiringPiSetupOdroid (void)
@@ -347,6 +347,7 @@ int wiringPiSetupOdroid (void)
     {
         if ((fd = open("/dev/gpiomem", O_RDWR | O_SYNC | O_CLOEXEC)) < 0)
             return wiringPiFailure(WPI_ALMOST, "wiringPiSetup: Unable to open /dev/gpiomem: %s\n", strerror(errno));
+        PyErr_WarnEx(NULL, "wiringPiSetupOdroid: /dev/gpiomem opened", 1);  //!!!odroiddebug
     }
     else
     {
@@ -355,6 +356,7 @@ int wiringPiSetupOdroid (void)
 
         if ((fd = open("/dev/mem", O_RDWR | O_SYNC | O_CLOEXEC)) < 0)
             return wiringPiFailure(WPI_ALMOST, "wiringPiSetup: Unable to open /dev/mem: %s\n", strerror(errno));
+        PyErr_WarnEx(NULL, "wiringPiSetupOdroid: /dev/mem opened", 1);  //!!!odroiddebug
     }
 
     //  piBoardId (&model, &rev, &mem, &maker, &overVolted) ;

@@ -87,7 +87,7 @@ int get_gpio_number(int channel, unsigned int *gpio)
     }
     else // gpio_mode == BCM
     {
-        *gpio = channel;
+        *gpio = *(*bcm_to_odroidgpio+channel);
     }
 
     return 0;
