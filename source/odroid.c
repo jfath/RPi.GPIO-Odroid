@@ -56,11 +56,11 @@
 //		Added in the 2 UART pins
 //		Change maxPins to numPins to more accurately reflect purpose
 
-#ifdef DEFINE_ODROID_CODE
 #include <stdarg.h>
 #include <errno.h>
 #include <unistd.h>
 #include <sys/utsname.h>
+#include "odroid.h"
 
 
 //****************************************************************************************************
@@ -353,10 +353,10 @@ int wiringPiSetupOdroid (void)
     //  piBoardId (&model, &rev, &mem, &maker, &overVolted) ;
 
     //wiringPi pin numbers are unused in rPI.GPIO
-    pinToGpio = NULL;
-    pin_array_count = 0;
+//    pinToGpio = NULL;
+//    pin_array_count = 0;
     //physToGPIO replaced by pin_to_gpio in rPI.GPIO
-    physToGpio = NULL;
+//    physToGpio = NULL;
 
     if (piModel == PI_MODEL_ODROIDC)
     {
@@ -366,7 +366,7 @@ int wiringPiSetupOdroid (void)
         gpio = (uint32_t *)mmap(0, BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, ODROID_GPIO_BASE);
         if ((int32_t)gpio == -1)
             return wiringPiFailure(WPI_ALMOST, "wiringPiSetup: mmap (GPIO) failed: %s\n", strerror(errno));
-        gpio1 = gpio;
+        gpio1 = NULL;
 
         // ADC
         // ADC sysfs open (/sys/class/saradc/saradc_ch0, ch1)
@@ -380,7 +380,7 @@ int wiringPiSetupOdroid (void)
         gpio = (uint32_t *)mmap(0, BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, ODROIDC2_GPIO_BASE);
         if ((int32_t)gpio == -1)
             return wiringPiFailure(WPI_ALMOST, "wiringPiSetup: mmap (GPIO) failed: %s\n", strerror(errno));
-        gpio1 = gpio;
+        gpio1 = NULL;
 
         // ADC
         // ADC sysfs open (/sys/class/saradc/saradc_ch0, ch1)
@@ -430,6 +430,11 @@ int wiringPiSetupOdroid (void)
     return 0;
 }
 
+void wiringPiCleanupOdroid (void)
+{
+        munmap((void *)gpio, BLOCK_SIZE);
+        if (gpio1 != NULL) munmap((void *)gpio1, BLOCK_SIZE);
+}
 
 /*
  * pinMode:
@@ -439,12 +444,9 @@ int wiringPiSetupOdroid (void)
 
 void pinModeOdroid (int pin, int mode)
 {
-    int fSel, shift, alt;
+    int shift;
     //Odroid: For our purposes pin comes in as gpio, original code converted
     //pin to gpio and kept origPin as pin#
-
-    fSel = gpioToGPFSEL[pin];
-    shift = gpioToShift[pin];
 
     if (mode == INPUT)
     {
@@ -482,15 +484,18 @@ void pinModeOdroid (int pin, int mode)
         else
             wiringPiFailure(WPI_FATAL, "pinModeOdroid: This code should only be called for Odroid\n");
     }
+#if 0
+    //!!!odroid SOFT_PWM_OUTPUT
     else if (mode == SOFT_PWM_OUTPUT)
     {
         if (piModel == PI_MODEL_ODROIDC ||
             piModel == PI_MODEL_ODROIDC2 ||
             piModel == PI_MODEL_ODROIDXU_34)
-            softPwmCreate(pin, 0, 100);
+            //!!!odroid softPwmCreate(pin, 0, 100);
         else
             wiringPiFailure(WPI_FATAL, "pinModeOdroid: This code should only be called for Odroid\n");
     }
+#endif
 }
 
 
@@ -556,7 +561,7 @@ void pullUpDnControlOdroid (int pin, int pud)
         }
     }
     else
-        wiringPiFailure(WPI_FATAL, "pinModeOdroid: This code should only be called for Odroid\n");
+        wiringPiFailure(WPI_FATAL, "pullUpDnControlOdroid: This code should only be called for Odroid\n");
 }
 
 /*
@@ -584,7 +589,7 @@ int digitalReadOdroid (int pin)
             return *(gpio1 + gpioToGPLEVReg(pin)) & (1 << gpioToShiftReg(pin)) ? HIGH : LOW;
     }
     else
-        wiringPiFailure(WPI_FATAL, "pinModeOdroid: This code should only be called for Odroid\n");
+        wiringPiFailure(WPI_FATAL, "digitalReadOdroid: This code should only be called for Odroid\n");
 }
 
 /*
@@ -621,7 +626,7 @@ void digitalWriteOdroid (int pin, int value)
         }
     }
     else
-        wiringPiFailure(WPI_FATAL, "pinModeOdroid: This code should only be called for Odroid\n");
+        wiringPiFailure(WPI_FATAL, "digitalWriteOdroid: This code should only be called for Odroid\n");
 }
 
 /*
@@ -653,7 +658,7 @@ int analogReadOdroid (int pin)
         }
     }
     else
-        wiringPiFailure(WPI_FATAL, "pinModeOdroid: This code should only be called for Odroid\n");
+        wiringPiFailure(WPI_FATAL, "analogReadOdroid: This code should only be called for Odroid\n");
 }
 
 /*
@@ -666,8 +671,5 @@ int analogReadOdroid (int pin)
 
 void analogWriteOdroid (int pin, int value)
 {
-    //!!!odroid no dac on board
+            wiringPiFailure(WPI_FATAL, "analogWriteOdroid: No DAC on Odroid\n");
 }
-
-#else /* DEFINE_ODROID_CODE */
-#endif /* DEFINE_ODROID_CODE */

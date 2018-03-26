@@ -421,8 +421,6 @@ static int pinToGpioOdroidXU [64] = {
 
 /* end wiringPi.c code */
 
-/* JF added */
-static volatile uint32_t *gpio_map_odroid[2];
 
 /* Non-static add extern definition below */
 int odroid_found;

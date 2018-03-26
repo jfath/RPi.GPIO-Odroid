@@ -81,10 +81,6 @@ int setup(void)
         wiringPiSetupOdroid();  //Will exit on fail
         //xu4 maps two areas
         //gpio1 needed for GPA 2.4, 2.5, 2.6, 2.7, 3.2, 3.3
-        //wiringPi code uses second pointer for pins >= 100
-        //we use gpio_map_odroid array for access
-        gpio_map = gpio_map_odroid[0] = gpio;
-        gpio_map_odroid[1] = gpio1;
         return SETUP_OK;
     }
 
@@ -249,24 +245,9 @@ void set_pullupdn(int gpio, int pud)
         char buf[256];
         sprintf(buf, "set_pullupdn: gpio=%i pud=%i", gpio, pud);
         PyErr_WarnEx(NULL, buf, 1);
-        sprintf(buf, "set_pullupdn: gpioToPUENReg=0x%x gpioToPUPDReg=0x%x ", gpioToPUENReg(gpio), gpioToPUPDReg(gpio));
-        PyErr_WarnEx(NULL, buf, 1);
     }
     if (odroid_found) {
-        int puenReg;
-
-        puenReg=gpioToPUENReg(gpio);
-        if(pud) {
-            // Enable Pull/Pull-down resister
-            if (puenReg != -1) *(gpio_map_odroid[(gpio >= 100)] + gpioToPUENReg(gpio)) = (*(gpio_map_odroid[(gpio >= 100)] + gpioToPUENReg(gpio)) | (1 << gpioToShiftReg(gpio)));
-
-            if(pud == PUD_UP)
-                *(gpio_map_odroid[(gpio >= 100)] + gpioToPUPDReg(gpio)) = (*(gpio_map_odroid[(gpio >= 100)] + gpioToPUPDReg(gpio)) |  (1 << gpioToShiftReg(gpio)));
-            else
-                *(gpio_map_odroid[(gpio >= 100)] + gpioToPUPDReg(gpio)) = (*(gpio_map_odroid[(gpio >= 100)] + gpioToPUPDReg(gpio)) & ~(1 << gpioToShiftReg(gpio)));
-        }
-        else    // Disable Pull/Pull-down resister
-            if (puenReg != -1) *(gpio_map_odroid[(gpio >= 100)] + gpioToPUENReg(gpio)) = (*(gpio_map_odroid[(gpio >= 100)] + gpioToPUENReg(gpio)) & ~(1 << gpioToShiftReg(gpio)));
+        pullUpDnControlOdroid(gpio, pud);
     }
     else {
         int clk_offset = PULLUPDNCLK_OFFSET + (gpio/32);
@@ -285,6 +266,9 @@ void set_pullupdn(int gpio, int pud)
         *(gpio_map+PULLUPDN_OFFSET) &= ~3;
         *(gpio_map+clk_offset) = 0;
     }
+    {     //!!!odroiddebug
+        PyErr_WarnEx(NULL, "set_pullupdn: Done", 1);
+    }
 }
 
 void setup_gpio(int gpio, int direction, int pud)
@@ -293,22 +277,10 @@ void setup_gpio(int gpio, int direction, int pud)
         char buf[256];
         sprintf(buf, "setup_gpio: gpio=%i, dirout=%i, pud=%i", gpio, (direction==OUTPUT) ? 1:0, pud);
         PyErr_WarnEx(NULL, buf, 1);
-        sprintf(buf, "setup_gpio: gpio_map_odroid[0]=0x%x gpio_map_odroid[1]=0x%x ", gpio_map_odroid[0], gpio_map_odroid[1]);
-        PyErr_WarnEx(NULL, buf, 1);
-        sprintf(buf, "setup_gpio: gpioToGPFSELReg=0x%x ", gpioToGPFSELReg(gpio) );
-        PyErr_WarnEx(NULL, buf, 1);
     }
     if (odroid_found) {
         set_pullupdn(gpio, pud);
-    {     //!!!odroiddebug
-        char buf[256];
-        sprintf(buf, "setup_gpio: pullupdn OK");
-        PyErr_WarnEx(NULL, buf, 1);
-    }
-        if (direction == OUTPUT)
-            *(gpio_map_odroid[(gpio >= 100)] + gpioToGPFSELReg(gpio)) = (*(gpio_map_odroid[(gpio >= 100)] + gpioToGPFSELReg(gpio)) & ~(1 << gpioToShiftReg(gpio)));
-        else  // direction == INPUT
-            *(gpio_map_odroid[(gpio >= 100)] + gpioToGPFSELReg(gpio)) = (*(gpio_map_odroid[(gpio >= 100)] + gpioToGPFSELReg(gpio)) |  (1 << gpioToShiftReg(gpio)));   
+        pinModeOdroid (gpio, direction);
     }
     else {
         int offset = FSEL_OFFSET + (gpio/10);
@@ -328,11 +300,12 @@ void setup_gpio(int gpio, int direction, int pud)
 // Contribution by Eric Ptak <trouch@trouch.com>
 int gpio_function(int gpio)
 {
+    {     //!!!odroiddebug
+        PyErr_WarnEx(NULL, "gpio_function: Start", 1);
+    }
     if (odroid_found) {
-        int shift = gpioToShiftReg(gpio);
-        int value = (*(gpio_map_odroid[(gpio >= 100)] + gpioToGPFSELReg(gpio)) & (1 << gpioToShiftReg(gpio)));
-        value >>= shift;
-        return ~value & 1; // 0=input, 1=output
+        //!!!odroid read current input/output state
+        return 0; // 0=input, 1=output
     }
     else {
         int offset = FSEL_OFFSET + (gpio/10);
@@ -353,10 +326,7 @@ void output_gpio(int gpio, int value)
     }
 
     if (odroid_found) {
-        if (value) // value == HIGH
-            *(gpio_map_odroid[(gpio >= 100)] + gpioToGPSETReg(gpio)) |=  (1 << gpioToShiftReg(gpio));
-        else       // value == LOW
-            *(gpio_map_odroid[(gpio >= 100)] + gpioToGPSETReg(gpio)) &= ~(1 << gpioToShiftReg(gpio));
+        digitalWriteOdroid(gpio, (value) ? HIGH : LOW);
     }
     else {
         int offset, shift;
@@ -380,7 +350,7 @@ int input_gpio(int gpio)
         PyErr_WarnEx(NULL, buf, 1);
     }
     if (odroid_found) {
-        return (*(gpio_map_odroid[(gpio >= 100)] + gpioToGPLEVReg(gpio)) & (1 << gpioToShiftReg(gpio)));
+        return digitalReadOdroid(gpio);
     }
     else {
         int offset, value, mask;
@@ -395,8 +365,7 @@ int input_gpio(int gpio)
 void cleanup(void)
 {
     if (odroid_found) {
-        munmap((void *)gpio_map_odroid[0], BLOCK_SIZE);
-        if (gpio_map_odroid[0] != gpio_map_odroid[1]) munmap((void *)gpio_map_odroid[1], BLOCK_SIZE);
+        wiringPiCleanupOdroid();
     }
     else {
         munmap((void *)gpio_map, BLOCK_SIZE);
