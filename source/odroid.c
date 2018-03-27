@@ -56,12 +56,19 @@
 //		Added in the 2 UART pins
 //		Change maxPins to numPins to more accurately reflect purpose
 
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/utsname.h>
-#include "odroid.h"
+#include <sys/mman.h>
 
+#define DEFINE_ODROID_VARS
+#include "odroid.h"
 
 //****************************************************************************************************
 

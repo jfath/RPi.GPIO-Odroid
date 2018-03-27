@@ -22,9 +22,9 @@ SOFTWARE.
 
 from distutils.core import setup, Extension
 
-classifiers = ['Development Status :: 5 - Production/Stable',
+classifiers = ['Development Status :: 4 - Beta',
                'Operating System :: POSIX :: Linux',
-               'License :: OSI Approved :: MIT License',
+               'License :: OSI Approved :: LGPL v3.0 License',
                'Intended Audience :: Developers',
                'Programming Language :: Python :: 2.7',
                'Programming Language :: Python :: 3',
@@ -33,14 +33,14 @@ classifiers = ['Development Status :: 5 - Production/Stable',
                'Topic :: System :: Hardware']
 
 setup(name             = 'RPi.GPIO',
-      version          = '0.6.3',
+      version          = '0.6.3.post1',
       author           = 'Ben Croston',
       author_email     = 'ben@croston.org',
-      description      = 'A module to control Raspberry Pi GPIO channels',
+      description      = 'A module to control Raspberry Pi and ODROID GPIO channels',
       long_description = open('README.txt').read() + open('CHANGELOG.txt').read(),
-      license          = 'MIT',
+      license          = 'LGPL v3.0',
       keywords         = 'Raspberry Pi GPIO',
-      url              = 'http://sourceforge.net/projects/raspberry-gpio-python/',
+      url              = 'https://github.com/jfath/RPi.GPIO-Odroid',
       classifiers      = classifiers,
       packages         = ['RPi','RPi.GPIO'],
-      ext_modules      = [Extension('RPi._GPIO', ['source/py_gpio.c', 'source/c_gpio.c', 'source/cpuinfo.c', 'source/event_gpio.c', 'source/soft_pwm.c', 'source/py_pwm.c', 'source/common.c', 'source/constants.c'])])
+      ext_modules      = [Extension('RPi._GPIO', ['source/py_gpio.c', 'source/c_gpio.c', 'source/cpuinfo.c', 'source/event_gpio.c', 'source/soft_pwm.c', 'source/py_pwm.c', 'source/common.c', 'source/constants.c', 'source/odroid.c'])])

@@ -27,6 +27,7 @@ SOFTWARE.
 #include <sys/mman.h>
 #include <string.h>
 #include "c_gpio.h"
+#include "odroid.h"
 
 #define BCM2708_PERI_BASE_DEFAULT   0x20000000
 #define BCM2709_PERI_BASE_DEFAULT   0x3f000000
@@ -45,12 +46,6 @@ SOFTWARE.
 
 #define PAGE_SIZE  (4*1024)
 #define BLOCK_SIZE (4*1024)
-
-//Split Odroid specific vars and code into seperate files
-#define DEFINE_ODROID_VARS
-#include "odroid.h"
-#define DEFINE_ODROID_CODE
-#include "odroid.c"
 
 static volatile uint32_t *gpio_map;
 

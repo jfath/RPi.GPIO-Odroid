@@ -168,6 +168,24 @@ static int adcFds [2] = {
 
 #ifdef DEFINE_ODROID_VARS
 
+//From c_gpio.c and c_gpio.h
+
+#define PAGE_SIZE  (4*1024)
+#define BLOCK_SIZE (4*1024)
+
+#define INPUT  1 // is really 0 for control register!
+#define OUTPUT 0 // is really 1 for control register!
+#define ALT0   4
+
+#define HIGH 1
+#define LOW  0
+
+#define PUD_OFF  0
+#define PUD_DOWN 1
+#define PUD_UP   2
+
+//End from c_gpio.c and c_gpio.h
+
 int wiringPiReturnCodes = FALSE ;
 
 static volatile uint32_t *gpio, *gpio1;
@@ -486,6 +504,16 @@ extern const int bcmToOGpioOdroidC2[64];
 extern const int bcmToOGpioOdroidXU[64];
 extern const int bcmToOGpioRPi[64];
 extern const int (*bcm_to_odroidgpio)[64];
+
+int wiringPiSetupOdroid (void);
+void wiringPiCleanupOdroid (void);
+void pinModeOdroid (int pin, int mode);
+void pullUpDnControlOdroid (int pin, int pud);
+int digitalReadOdroid (int pin);
+void digitalWriteOdroid (int pin, int value);
+int analogReadOdroid (int pin);
+void analogWriteOdroid (int pin, int value);
+int pinGetModeOdroid (int pin);
 
 #endif /* DEFINE_ODROID_VARS */
 
