@@ -203,11 +203,6 @@ static PyObject *py_setup_channel(PyObject *self, PyObject *args, PyObject *kwar
          return 0;
 
       func = gpio_function(gpio);
-    {     //!!odroiddebug
-        char buf[256];
-        sprintf(buf, "gpio=%d, func=%i, gpio_direction=%i", gpio, func, gpio_direction[gpio]);
-        PyErr_WarnEx(NULL, buf, 1);
-    }
       if (gpio_warnings &&                             // warnings enabled and
           ((func != 0 && func != 1) ||                 // (already one of the alt functions or
           (gpio_direction[gpio] == -1 && func == 1)))  // already an output not set from this program)
@@ -1035,11 +1030,6 @@ PyMODINIT_FUNC init_GPIO(void)
                               "RAM",rpiinfo.ram);
    PyModule_AddObject(module, "RPI_INFO", board_info); 
 
-    {     //!!odroiddebug
-        char buf[256];
-        sprintf(buf, "manu=%s, type=%s", rpiinfo.manufacturer, rpiinfo.type);
-        PyErr_WarnEx(NULL, buf, 1);
-    }
     if (strstr(rpiinfo.type, "ODROID")) {
         if (strcmp(rpiinfo.type, "ODROID-C1/C1+") == 0) {
             pin_to_gpio = (const int (*)[41])&physToGpioOdroidC;

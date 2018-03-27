@@ -338,7 +338,6 @@ int wiringPiSetupOdroid (void)
     {
         if ((fd = open("/dev/gpiomem", O_RDWR | O_SYNC | O_CLOEXEC)) < 0)
             return wiringPiFailure(WPI_ALMOST, "wiringPiSetup: Unable to open /dev/gpiomem: %s\n", strerror(errno));
-        PyErr_WarnEx(NULL, "wiringPiSetupOdroid: /dev/gpiomem opened", 1);  //!!odroiddebug
     }
     else
     {
@@ -347,7 +346,6 @@ int wiringPiSetupOdroid (void)
 
         if ((fd = open("/dev/mem", O_RDWR | O_SYNC | O_CLOEXEC)) < 0)
             return wiringPiFailure(WPI_ALMOST, "wiringPiSetup: Unable to open /dev/mem: %s\n", strerror(errno));
-        PyErr_WarnEx(NULL, "wiringPiSetupOdroid: /dev/mem opened", 1);  //!!odroiddebug
     }
 
     //  piBoardId (&model, &rev, &mem, &maker, &overVolted) ;
@@ -687,25 +685,27 @@ void analogWriteOdroid (int pin, int value)
 int pinGetModeOdroid (int pin)
 {
     int shift;
-    int rwbit;
+    int rwbit, regval, retval=0;
     //Odroid: pin comes in as gpio
 
     if (piModel == PI_MODEL_ODROIDC || piModel == PI_MODEL_ODROIDC2) {
-        rwbit = (*(gpio + gpioToGPFSELReg(pin))) & (1 << gpioToShiftReg(pin));
-        return (rwbit!=0) ? INPUT : OUTPUT;
+        regval = (*(gpio + gpioToGPFSELReg(pin)));
+        rwbit = regval & (1 << gpioToShiftReg(pin));
+        retval = ((rwbit!=0) ? 0 : 1);
     }
     else if (piModel == PI_MODEL_ODROIDXU_34)
     {
         shift = (gpioToShiftReg(pin) * 4);
         if (pin < 100)
-            rwbit = (*(gpio + gpioToGPFSELReg(pin))) & (0x1 << shift);
+            regval = (*(gpio + gpioToGPFSELReg(pin)));
         else
-            rwbit = (*(gpio1 + gpioToGPFSELReg(pin))) & (0x1 << shift);
-        return (rwbit!=0) ? OUTPUT : INPUT; 
+            regval = (*(gpio1 + gpioToGPFSELReg(pin)));
+        rwbit = regval & (0x1 << shift);
+        retval=((rwbit!=0) ? 1 : 0); 
     }
     else
         wiringPiFailure(WPI_FATAL, "pinGetModeOdroid: This code should only be called for Odroid\n");
 
-    return INPUT;
+    return retval;
 }
 

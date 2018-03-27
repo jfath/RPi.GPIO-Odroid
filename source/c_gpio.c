@@ -241,11 +241,6 @@ void set_low_event(int gpio, int enable)
 
 void set_pullupdn(int gpio, int pud)
 {
-    {     //!!odroiddebug
-        char buf[256];
-        sprintf(buf, "set_pullupdn: gpio=%i pud=%i", gpio, pud);
-        PyErr_WarnEx(NULL, buf, 1);
-    }
     if (odroid_found) {
         pullUpDnControlOdroid(gpio, pud);
     }
@@ -266,18 +261,10 @@ void set_pullupdn(int gpio, int pud)
         *(gpio_map+PULLUPDN_OFFSET) &= ~3;
         *(gpio_map+clk_offset) = 0;
     }
-    {     //!!odroiddebug
-        PyErr_WarnEx(NULL, "set_pullupdn: Done", 1);
-    }
 }
 
 void setup_gpio(int gpio, int direction, int pud)
 {
-    {     //!!odroiddebug
-        char buf[256];
-        sprintf(buf, "setup_gpio: gpio=%i, dirout=%i, pud=%i", gpio, (direction==OUTPUT) ? 1:0, pud);
-        PyErr_WarnEx(NULL, buf, 1);
-    }
     if (odroid_found) {
         set_pullupdn(gpio, pud);
         pinModeOdroid (gpio, direction);
@@ -292,17 +279,11 @@ void setup_gpio(int gpio, int direction, int pud)
         else  // direction == INPUT
             *(gpio_map+offset) = (*(gpio_map+offset) & ~(7<<shift));
     }
-    {     //!!odroiddebug
-        PyErr_WarnEx(NULL, "setup_gpio: Done", 1);
-    }
 }
 
 // Contribution by Eric Ptak <trouch@trouch.com>
 int gpio_function(int gpio)
 {
-    {     //!!odroiddebug
-        PyErr_WarnEx(NULL, "gpio_function: Start", 1);
-    }
     if (odroid_found) {
         return pinGetModeOdroid(gpio);
     }
@@ -318,12 +299,6 @@ int gpio_function(int gpio)
 
 void output_gpio(int gpio, int value)
 {
-    {     //!!odroiddebug
-        char buf[256];
-        sprintf(buf, "output_gpio: gpio=%i, val=%i", gpio, value);
-        PyErr_WarnEx(NULL, buf, 1);
-    }
-
     if (odroid_found) {
         digitalWriteOdroid(gpio, (value) ? HIGH : LOW);
     }
@@ -343,11 +318,6 @@ void output_gpio(int gpio, int value)
 
 int input_gpio(int gpio)
 {
-    {     //!!odroiddebug
-        char buf[256];
-        sprintf(buf, "input_gpio: gpio=%i", gpio);
-        PyErr_WarnEx(NULL, buf, 1);
-    }
     if (odroid_found) {
         return digitalReadOdroid(gpio);
     }
