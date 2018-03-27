@@ -25,7 +25,6 @@ SOFTWARE.
 #include <time.h>
 #include "c_gpio.h"
 #include "soft_pwm.h"
-#include "odroid.h"
 pthread_t threads;
 
 struct pwm

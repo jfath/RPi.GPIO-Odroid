@@ -1031,18 +1031,7 @@ PyMODINIT_FUNC init_GPIO(void)
    PyModule_AddObject(module, "RPI_INFO", board_info); 
 
     if (strstr(rpiinfo.type, "ODROID")) {
-        if (strcmp(rpiinfo.type, "ODROID-C1/C1+") == 0) {
-            pin_to_gpio = (const int (*)[41])&physToGpioOdroidC;
-            bcm_to_odroidgpio = &bcmToOGpioOdroidC;
-        }
-        else if (strcmp(rpiinfo.type, "ODROID-C2") == 0) {
-            pin_to_gpio = (const int (*)[41])&physToGpioOdroidC2_Rev1_1;
-            bcm_to_odroidgpio = &bcmToOGpioOdroidC2;
-        }
-        else if (strcmp(rpiinfo.type, "ODROID-XU3/4") == 0) {
-            pin_to_gpio = (const int (*)[41])&physToGpioOdroidXU;
-            bcm_to_odroidgpio = &bcmToOGpioOdroidXU;
-        }
+        setMappingPtrsOdroid();
     }
     else {
         bcm_to_odroidgpio = &bcmToOGpioRPi;  //1:1 mapping

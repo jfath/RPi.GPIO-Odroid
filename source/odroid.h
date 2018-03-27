@@ -169,7 +169,6 @@ static int adcFds [2] = {
 #ifdef DEFINE_ODROID_VARS
 
 //From c_gpio.c and c_gpio.h
-
 #define PAGE_SIZE  (4*1024)
 #define BLOCK_SIZE (4*1024)
 
@@ -183,8 +182,12 @@ static int adcFds [2] = {
 #define PUD_OFF  0
 #define PUD_DOWN 1
 #define PUD_UP   2
-
 //End from c_gpio.c and c_gpio.h
+
+//From common.h
+#define MAXPINCOUNT 40
+extern const int (*pin_to_gpio)[MAXPINCOUNT+1];
+//End from common.h
 
 int wiringPiReturnCodes = FALSE ;
 
@@ -514,6 +517,8 @@ void digitalWriteOdroid (int pin, int value);
 int analogReadOdroid (int pin);
 void analogWriteOdroid (int pin, int value);
 int pinGetModeOdroid (int pin);
+void setInfoOdroid(char *hardware, void *vinfo);
+void setMappingPtrsOdroid(void);
 
 #endif /* DEFINE_ODROID_VARS */
 
