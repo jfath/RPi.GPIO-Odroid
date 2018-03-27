@@ -38,6 +38,9 @@ PWM, events, analog read, ... not implemented
 Simple test app:  
   
 ```
+#Read state of GPIO output on GPIO input  
+#Use jumper wire from pin 13 to pin 31  
+#XU4 without shifter-shield pin 13 to pin 19  
 import RPi.GPIO as GPIO  
 import time  
   
