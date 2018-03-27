@@ -21,5 +21,65 @@ contains code from both projects, it is licensed under the slightly more restric
   
   
 ## Status  
-Incomplete, non-working  
+Working for simple IO on C1, XU4, RPi  
+Likely working on C2, but no device to test  
+PWM, events, analog read, ... not implemented  
+  
+  
+## Building  
+1) Install build-essential, python, python-dev, git  
+2) git clone https://github.com/jfath/RPi.GPIO-Odroid.git  
+3) cd RPi.GPIO-Odroid  
+4) sudo python setup.py clean --all  
+5) sudo python setup.py build install  
+  
+
+## Usage  
+Simple test app:  
+  
+```
+import RPi.GPIO as GPIO  
+import time  
+  
+LedPinW = 27    # pin13, bcm27  
+LedPinR = 6    # pin31, bcm6  
+  
+def setup():  
+  GPIO.setmode(GPIO.BCM)       # Number GPIOs by BCM chip numbering scheme  
+  GPIO.setup(LedPinR, GPIO.IN, pull_up_down=GPIO.PUD_UP)   # Set LedPinR mode input  
+  GPIO.setup(LedPinW, GPIO.OUT)   # Set LedPinW mode is output  
+  GPIO.output(LedPinW, GPIO.HIGH) # Set LedPinW pin high  
+  
+def blink():  
+  while True:  
+    GPIO.output(LedPinW, GPIO.HIGH)  # LedPinW high  
+    time.sleep(2)  
+    pstate=GPIO.input(LedPinR)  # Read LedPinR  
+    print("*****Pin state (LedPinW HIGH) ", pstate, "*****\n")  
+    time.sleep(2)  
+    GPIO.output(LedPinW, GPIO.LOW) # LedPinW low  
+    time.sleep(2)  
+    pstate=GPIO.input(LedPinR)  # Read LedPinR  
+    print("*****Pin state (LedPinW LOW) ", pstate, "*****\n")  
+    time.sleep(2)  
+  
+def shutdown():  
+  GPIO.output(LedPinW, GPIO.LOW)   # LedPinW low  
+  GPIO.setup(LedPinW, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)   # LedPinW input  
+  GPIO.cleanup()  
+  
+if __name__ == '__main__':     # Program start  
+  setup()  
+  try:  
+    blink()  
+  except KeyboardInterrupt:  # When 'Ctrl+C' is pressed, shut down cleanly  
+    shutdown()  
+```
+  
+  
+## Notes  
+Apps require root (eg 'sudo python testapp.py')  
+When using BCM mode, RPi BCM numbers are passed to GPIO.xxx and translated internally to Odroid GPIO numbers  
+Compare RPi connector pinout / BCM chart and Odroid pinout to match RPi BCM with Odroid pins  
+Odroid XU4 pin numbers use shifter-shield numbers  
   
