@@ -2,7 +2,7 @@
 *  Odroid specific code borrowed from Hardkernel's wiringPi port
 */
 
-// License and info rom Hardkernel's original file:
+// License and info from Hardkernel's original file:
 /*
  * wiringPi:
  *	Arduino compatable (ish) Wiring library for the Raspberry Pi
@@ -482,7 +482,7 @@ const int bcmToOGpioOdroidXU[64] = {	// BCM ModE
 
 const int bcmToOGpioRPi[64] = {	// BCM ModE
       0,   1,   2,   3,   4,   5,   6,   7, // 0..7
-      8,   8,  10,  11,  12,  13,  14,  15, // 8..15
+      8,   9,  10,  11,  12,  13,  14,  15, // 8..15
      16,  17,  16,  19,  20,  21,  22,  23, // 16..23
      24,  25,  26,  27,  28,  29,  30,  31, // 24..31
 // Padding:

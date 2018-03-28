@@ -2,7 +2,7 @@
 *  Odroid specific code borrowed from Hardkernel's wiringPi port
 */
 
-// License and info rom Hardkernel's original file:
+// License and info from Hardkernel's original file:
 /*
  * wiringPi:
  *	Arduino compatable (ish) Wiring library for the Raspberry Pi
