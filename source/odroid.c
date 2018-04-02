@@ -346,15 +346,15 @@ int wiringPiSetupOdroid (void)
     if (access("/dev/gpiomem", 0) == 0)
     {
         if ((fd = open("/dev/gpiomem", O_RDWR | O_SYNC | O_CLOEXEC)) < 0)
-            return wiringPiFailure(WPI_ALMOST, "wiringPiSetup: Unable to open /dev/gpiomem: %s\n", strerror(errno));
+            return wiringPiFailure(WPI_ALMOST, "wpSetupOdroid: Unable to open /dev/gpiomem: %s\n", strerror(errno));
     }
     else
     {
         if (geteuid() != 0)
-            (void)wiringPiFailure(WPI_FATAL, "wiringPiSetup: Must be root. (Did you forget sudo?)\n");
+            (void)wiringPiFailure(WPI_FATAL, "wpSetupOdroid: Must be root. (Did you forget sudo?)\n");
 
         if ((fd = open("/dev/mem", O_RDWR | O_SYNC | O_CLOEXEC)) < 0)
-            return wiringPiFailure(WPI_ALMOST, "wiringPiSetup: Unable to open /dev/mem: %s\n", strerror(errno));
+            return wiringPiFailure(WPI_ALMOST, "wpSetupOdroid: Unable to open /dev/mem: %s\n", strerror(errno));
     }
 
     //  piBoardId (&model, &rev, &mem, &maker, &overVolted) ;
@@ -372,7 +372,7 @@ int wiringPiSetupOdroid (void)
 
         gpio = (uint32_t *)mmap(0, BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, ODROID_GPIO_BASE);
         if ((int32_t)gpio == -1)
-            return wiringPiFailure(WPI_ALMOST, "wiringPiSetup: mmap (GPIO) failed: %s\n", strerror(errno));
+            return wiringPiFailure(WPI_ALMOST, "wpSetupOdroid: mmap (GPIO) failed: %s\n", strerror(errno));
         gpio1 = NULL;
 
         // ADC
@@ -386,7 +386,7 @@ int wiringPiSetupOdroid (void)
         // GPIO:
         gpio = (uint32_t *)mmap(0, BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, ODROIDC2_GPIO_BASE);
         if ((int32_t)gpio == -1)
-            return wiringPiFailure(WPI_ALMOST, "wiringPiSetup: mmap (GPIO) failed: %s\n", strerror(errno));
+            return wiringPiFailure(WPI_ALMOST, "wpSetupOdroid: mmap (GPIO) failed: %s\n", strerror(errno));
         gpio1 = NULL;
 
         // ADC
@@ -420,12 +420,12 @@ int wiringPiSetupOdroid (void)
         //#define ODROIDXU_GPX_BASE   0x13400000  // GPX0,1,2,3
         gpio = (uint32_t *)mmap(0, BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, ODROIDXU_GPX_BASE);
         if ((int32_t)gpio == -1)
-            return wiringPiFailure(WPI_ALMOST, "wiringPiSetup: mmap (GPIO) failed: %s\n", strerror(errno));
+            return wiringPiFailure(WPI_ALMOST, "wpSetupOdroid: mmap (GPIO) failed: %s\n", strerror(errno));
 
         //#define ODROIDXU_GPA_BASE   0x14010000  // GPA0,1,2, GPB0,1,2,3,4
         gpio1 = (uint32_t *)mmap(0, BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, ODROIDXU_GPA_BASE);
         if ((int32_t)gpio1 == -1)
-            return wiringPiFailure(WPI_ALMOST, "wiringPiSetup: mmap (GPIO) failed: %s\n", strerror(errno));
+            return wiringPiFailure(WPI_ALMOST, "wpSetupOdroid: mmap (GPIO) failed: %s\n", strerror(errno));
 
         // ADC
         // ADC Fds[0] = ("/sys/devices/12d10000.adc/iio:device0/in_voltage0_raw")
