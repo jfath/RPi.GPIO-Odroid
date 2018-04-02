@@ -35,6 +35,7 @@ if __name__ == '__main__':     # Program start
   print('To read output correctly, jumper pin 13 (bcm27) to pin 31 (bcm6)')
   print('Press Ctrl-C to exit') 
   setup()  
+  print("Hardware information: ", GPIO.RPI_INFO)
   try:  
     blink()  
   except KeyboardInterrupt:  # When 'Ctrl+C' is pressed, shut down cleanly  
