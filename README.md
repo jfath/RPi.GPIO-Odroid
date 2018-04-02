@@ -50,7 +50,7 @@ LedPinR = 6    # pin31, bcm6
 def setup():  
   GPIO.setmode(GPIO.BCM)       # Number GPIOs by BCM chip numbering scheme  
   GPIO.setup(LedPinR, GPIO.IN, pull_up_down=GPIO.PUD_UP)   # Set LedPinR mode input  
-  GPIO.setup(LedPinW, GPIO.OUT)   # Set LedPinW mode is output  
+  GPIO.setup(LedPinW, GPIO.OUT)   # Set LedPinW mode to output  
   GPIO.output(LedPinW, GPIO.HIGH) # Set LedPinW pin high  
   
 def blink():  
@@ -72,11 +72,15 @@ def shutdown():
   GPIO.cleanup()  
   
 if __name__ == '__main__':     # Program start  
+  print('To read output correctly, jumper pin 13 (bcm27) to pin 31 (bcm6)')
+  print('Press Ctrl-C to exit') 
   setup()  
+  print("Hardware information: ", GPIO.RPI_INFO)
   try:  
     blink()  
   except KeyboardInterrupt:  # When 'Ctrl+C' is pressed, shut down cleanly  
-    shutdown()  
+    shutdown()
+ 
 ```
   
   
